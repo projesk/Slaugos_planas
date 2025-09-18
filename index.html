@@ -208,9 +208,9 @@ function generateResults() {
     html += `<strong>Širdies susitraukimų dažnis:</strong> ${f['pulsas'].value || '-'} / min<br>`;
     html += `<strong>Temperatūra:</strong> ${f['temperatura'].value || '-'} °C</p>`;
 
-    // Mygtukai gale
+    // Mygtukai
     html += `<button type="button" onclick="keltiISistema()">Kelti į sistemą</button> 
-             <button id="newPatientBtn" style="display:none;" onclick="location.reload()">Vertinti naują pacientą</button>`;
+             <button id="newPatientBtn" style="display:none;" type="button" onclick="resetForm()">Vertinti naują pacientą</button>`;
 
     document.getElementById('results').innerHTML = html;
 
@@ -244,6 +244,12 @@ function keltiISistema(){
         console.error(err);
         alert("❌ Klaida siunčiant į Google Sheets.");
     });
+}
+
+function resetForm(){
+    document.getElementById('nursingForm').reset();
+    document.getElementById('results').innerHTML = "";
+    document.getElementById('newPatientBtn').style.display = 'none';
 }
 </script>
 
