@@ -136,61 +136,20 @@ function toggleZaizdosAprasymas(sel) {
 const GOOGLE_SCRIPT_URL = "ĮRAŠYK_SAVO_WEBAPP_URL";
 
 let slaugosPlanas = {
-    "Kvėpavimo takai su tracheostominiu vamzdžiu": [
-        "Savalaikis atsiurbimas iš tracheostominio vamzdelio",
-        "Vamzdelio drėkinimas"
-    ],
-    "Nedidelis kraujavimas iš nosies": [
-        "AKS stebėjimas kraujavimui nestojant",
-        "Pacientas apmokintas kaip prižiūrėti nosį kai kraujavimas sustos"
-    ],
-    "Sutrikusi kvėpavimo funkcija (dusulys)": [
-        "SpO₂ stebėjimas",
-        "Prireikus O₂ skyrimas pagal SpO₂"
-    ],
-    "Neefektyvi dujų apykaita": [
-        "SpO₂ stebėjimas",
-        "O₂ skyrimas ir reguliavimas pagal SpO₂ duomenis"
-    ],
-    "Pažemėjęs kraujo spaudimas": [
-        "Patarta neskubėti keltis iš lovos ir pasėdėti nuleidus kojas prieš einant",
-        "Stebėjimas dėl galimų griuvimų"
-    ],
-    "Padidėjęs kraujo spaudimas": [
-        "AKS tolimesnis sekimas kas 4 val."
-    ],
-    "Sutrikusi mityba per burną": [
-        "PEG perrišimas",
-        "Pagalba maitinantis"
-    ],
-    "Rizika griuvimui dėl pagalbos poreikio": [
-        "Stebėti dėl griuvimų rizikos"
-    ],
-    "Rizika praguloms dėl lovos režimo": [
-        "Paciento padėties keitimas kas 3 valandas",
-        "Pakišamų indų naudojimas / sauskelnės",
-        "Pagalbinių priemonių naudojimas",
-        "Odos vientisumo stebėjimas dėl pragulų rizikos"
-    ],
-    "Pragulos": [
-        "Paciento kūno padėties keitimas kas 3 valandas",
-        "Pagalbinių priemonių naudojimas",
-        "Pragulos perrišimas"
-    ],
-    "Odos vientisumo pažeidimas (žaizda)": [
-        "Žaizdos perrišimas",
-        "Stebėjimas dėl infekcijos"
-    ],
-    "Ūmus/chroniškas skausmas": [
-        "Savalaikis nuskausminimas"
-    ],
-    "Padidėjusi temperatūra": [
-        "Temperatūros stebėjimas"
-    ],
-    "Hipotermija": [
-        "Šilumos palaikymas",
-        "Temperatūros stebėjimas"
-    ]
+    "Kvėpavimo takai su tracheostominiu vamzdžiu": ["Savalaikis atsiurbimas iš tracheostominio vamzdelio","Vamzdelio drėkinimas"],
+    "Nedidelis kraujavimas iš nosies": ["AKS stebėjimas kraujavimui nestojant","Pacientas apmokintas kaip prižiūrėti nosį kai kraujavimas sustos"],
+    "Sutrikusi kvėpavimo funkcija (dusulys)": ["SpO₂ stebėjimas","Prireikus O₂ skyrimas pagal SpO₂"],
+    "Neefektyvi dujų apykaita": ["SpO₂ stebėjimas","O₂ skyrimas ir reguliavimas pagal SpO₂ duomenis"],
+    "Pažemėjęs kraujo spaudimas": ["Patarta neskubėti keltis iš lovos ir pasėdėti nuleidus kojas prieš einant","Stebėjimas dėl galimų griuvimų"],
+    "Padidėjęs kraujo spaudimas": ["AKS tolimesnis sekimas kas 4 val."],
+    "Sutrikusi mityba per burną": ["PEG perrišimas","Pagalba maitinantis"],
+    "Rizika griuvimui dėl pagalbos poreikio": ["Stebėti dėl griuvimų rizikos"],
+    "Rizika praguloms dėl lovos režimo": ["Paciento padėties keitimas kas 3 valandas","Pakišamų indų naudojimas / sauskelnės","Pagalbinių priemonių naudojimas","Odos vientisumo stebėjimas dėl pragulų rizikos"],
+    "Pragulos": ["Paciento kūno padėties keitimas kas 3 valandas","Pagalbinių priemonių naudojimas","Pragulos perrišimas"],
+    "Odos vientisumo pažeidimas (žaizda)": ["Žaizdos perrišimas","Stebėjimas dėl infekcijos"],
+    "Ūmus/chroniškas skausmas": ["Savalaikis nuskausminimas"],
+    "Padidėjusi temperatūra": ["Temperatūros stebėjimas"],
+    "Hipotermija": ["Šilumos palaikymas","Temperatūros stebėjimas"]
 };
 
 let lastPayload = null;
@@ -200,39 +159,41 @@ function generateResults() {
     let esamos = [];
     let galimos = [];
 
-    // SPo2 logika: <95
-    if(f['saturacija'].value && f['saturacija'].value < 95){
-        esamos.push("Neefektyvi dujų apykaita");
-    }
+    // SpO₂ vertinimas
+    if(f['saturacija'].value && f['saturacija'].value < 95) esamos.push("Neefektyvi dujų apykaita");
 
-    // Temperatūros logika
+    // Temperatūros vertinimas
     let temp = parseFloat(f['temperatura'].value);
     if(temp){
-        if(temp >= 37.1){ esamos.push("Padidėjusi temperatūra"); }
-        if(temp < 36.0){ esamos.push("Hipotermija"); }
+        if(temp >= 37.1) esamos.push("Padidėjusi temperatūra");
+        if(temp < 36.0) esamos.push("Hipotermija");
     }
 
-    if(f['trach'].value==="taip"){esamos.push("Kvėpavimo takai su tracheostominiu vamzdžiu");}
-    if(f['nosis'].value==="istraukti"){esamos.push("Nedidelis kraujavimas iš nosies");}
-    if(f['dusulys'].value==="taip"){esamos.push("Sutrikusi kvėpavimo funkcija (dusulys)");}
+    if(f['trach'].value==="taip") esamos.push("Kvėpavimo takai su tracheostominiu vamzdžiu");
+    if(f['nosis'].value==="istraukti") esamos.push("Nedidelis kraujavimas iš nosies");
+    if(f['dusulys'].value==="taip") esamos.push("Sutrikusi kvėpavimo funkcija (dusulys)");
+    
     let sys=parseInt(f['sistolinis'].value), dia=parseInt(f['diastolinis'].value);
     if(sys && dia){
         if(sys<100 || dia<80) esamos.push("Pažemėjęs kraujo spaudimas");
         if(sys>139 || dia>95) esamos.push("Padidėjęs kraujo spaudimas");
     }
-    if(f['mityba'].value!=="burna"){esamos.push("Sutrikusi mityba per burną");}
-    if(f['mobilumas'].value==="lova"){galimos.push("Rizika praguloms dėl lovos režimo");}
-    if(f['mobilumas'].value==="pagalba"){galimos.push("Rizika griuvimui dėl pagalbos poreikio");}
-    if(f['pragulos'].value==="yra"){esamos.push("Pragulos");}
+    
+    if(f['mityba'].value!=="burna") esamos.push("Sutrikusi mityba per burną");
+    if(f['mobilumas'].value==="lova") galimos.push("Rizika praguloms dėl lovos režimo");
+    if(f['mobilumas'].value==="pagalba") galimos.push("Rizika griuvimui dėl pagalbos poreikio");
+    if(f['pragulos'].value==="yra") esamos.push("Pragulos");
     if(f['zaizdos'].value==="yra"){let apr=f['zaizdos_text'].value.trim();esamos.push("Odos vientisumo pažeidimas (žaizda)"+(apr?" – "+apr:""));}
     if(f['skausmas'].value==="taip"){let val=f['skausmoLygis'].value;esamos.push(`Ūmus/chroniškas skausmas${val?" ("+val+"/10)":""}`);}
 
+    // Rodome problemas
     let html = `<h3>Esamos problemos</h3><ul>${esamos.length?esamos.map(p=>`<li>${p}</li>`).join(''):"<li>Nepastebėta</li>"}</ul>`;
     html += `<h3>Galimos problemos</h3><ul>${galimos.length?galimos.map(p=>`<li>${p}</li>`).join(''):"<li>Nepastebėta</li>"}</ul>`;
 
+    // Slaugos planas
     html += "<h3>Slaugos planas</h3>";
     esamos.concat(galimos).forEach(p=>{
-        let key = Object.keys(slaugosPlanas).find(k=>p.startsWith(k));
+        let key=Object.keys(slaugosPlanas).find(k=>p.startsWith(k));
         if(key){
             html += `<div class="planas"><h4>${p}</h4><ul>`;
             slaugosPlanas[key].forEach(i=>html += `<li>${i}</li>`);
@@ -240,14 +201,17 @@ function generateResults() {
         }
     });
 
-    // Gyvybiniai rodikliai gale
+    // Gyvybinių rodiklių santrauka
     html += "<h3>Įvesti gyvybiniai rodikliai</h3>";
     html += `<p><strong>SpO₂:</strong> ${f['saturacija'].value || '-'} %<br>`;
     html += `<strong>AKS:</strong> ${f['sistolinis'].value || '-'} / ${f['diastolinis'].value || '-'} mmHg<br>`;
     html += `<strong>Širdies susitraukimų dažnis:</strong> ${f['pulsas'].value || '-'} / min<br>`;
     html += `<strong>Temperatūra:</strong> ${f['temperatura'].value || '-'} °C</p>`;
 
-    html += `<button onclick="keltiISistema()">Kelti į sistemą</button>`;
+    // Mygtukai gale
+    html += `<button type="button" onclick="keltiISistema()">Kelti į sistemą</button> 
+             <button id="newPatientBtn" style="display:none;" onclick="location.reload()">Vertinti naują pacientą</button>`;
+
     document.getElementById('results').innerHTML = html;
 
     lastPayload = {
@@ -264,17 +228,21 @@ function generateResults() {
 }
 
 function keltiISistema(){
-    if(!lastPayload){alert("Pirmiausia sugeneruokite rezultatą.");return;}
+    if(!lastPayload){
+        alert("Pirmiausia sugeneruokite rezultatą.");
+        return;
+    }
     fetch(GOOGLE_SCRIPT_URL,{
         method:"POST",
         mode:"no-cors",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify(lastPayload)
     }).then(()=>{
-        alert("Duomenys išsiųsti į Google Sheets!");
+        alert("✅ Duomenys įkelti sėkmingai!");
+        document.getElementById('newPatientBtn').style.display = 'inline-block';
     }).catch(err=>{
         console.error(err);
-        alert("Klaida siunčiant į Google Sheets.");
+        alert("❌ Klaida siunčiant į Google Sheets.");
     });
 }
 </script>
