@@ -12,7 +12,6 @@
   button { padding: 10px 15px; background: #2c7; border: none; cursor: pointer; margin-top: 10px; }
   button:hover { background: #29a; color: white; }
   .results { background: #f0f0f0; padding: 15px; margin-top: 20px; border-radius: 4px; }
-  #zaizdos_aprasymas { display: none; }
   .planas { background: #fff; border: 1px solid #ccc; margin-top: 15px; padding: 10px; }
   .planas h4 { margin: 5px 0; }
 </style>
@@ -30,7 +29,7 @@
 <label>Lova: <input type="text" name="lova"></label>
 </div>
 
-<!-- KVĖPAVIMAS -->
+<!-- KVĖPAVIMO SISTEMA -->
 <div class="section">
 <h2>Kvėpavimo sistema</h2>
 <label>Tracheostominis vamzdis:
@@ -110,7 +109,7 @@
 <select name="pragulos"><option value="nera">Nėra</option><option value="yra">Yra</option></select></label>
 <label>Žaizdos:
 <select name="zaizdos" onchange="toggleZaizdosAprasymas(this)"><option value="nera">Nėra</option><option value="yra">Yra</option></select></label>
-<div id="zaizdos_aprasymas">
+<div id="zaizdos_aprasymas" style="display:none;">
 <label>Žaizdos aprašymas:</label>
 <textarea name="zaizdos_text" rows="3"></textarea>
 </div>
@@ -124,96 +123,161 @@
 <label>Intensyvumas (0-10) <input type="number" name="skausmoLygis" min="0" max="10"></label>
 </div>
 
-<button type="button" onclick="generateResults()">Generuoti problemas ir planą</button>
+<button type="button" onclick="generateResults()">Generuoti</button>
 </form>
 
 <div class="results" id="results"></div>
 
 <script>
 function toggleZaizdosAprasymas(sel) {
-document.getElementById('zaizdos_aprasymas').style.display = (sel.value === "yra") ? "block" : "none";
+    document.getElementById('zaizdos_aprasymas').style.display = (sel.value === "yra") ? "block" : "none";
 }
+
+const GOOGLE_SCRIPT_URL = "ĮRAŠYK_SAVO_WEBAPP_URL";
 
 let slaugosPlanas = {
-"Kvėpavimo takai su tracheostominiu vamzdžiu": {tikslas:"Užtikrinti kvėpavimo takų praeinamumą", intervencijos:["Savalaikis sekreto atsiurbimas","Vamzdelio drėkinimas","Stebėti kvėpavimą ir SpO₂"]},
-"Nedidelis kraujavimas iš nosies": {tikslas:"Sustabdyti kraujavimą", intervencijos:["Stebėti AKS, jei kraujavimas nesustoja","Apmokyti nosies priežiūros"]},
-"Sutrikusi kvėpavimo funkcija (dusulys)": {tikslas:"Dusulys sumažėja", intervencijos:["Stebėti SpO₂","Prireikus skirti O₂"]},
-"Neefektyvi dujų apykaita": {tikslas:"Pagerinti dujų apykaitą", intervencijos:["Stebėti SpO₂","Skirti/reguliuoti O₂"]},
-"Pažemėjęs kraujo spaudimas": {tikslas:"AKS normos ribose", intervencijos:["Matuoti AKS kas 2–4h","Patarti neskubėti keltis","Stebėti griuvimus"]},
-"Padidėjęs kraujo spaudimas": {tikslas:"Sumažinti AKS iki normos", intervencijos:["Toliau sekti AKS kas 4h","Stebėti simptomus"]},
-"Sutrikusi mityba per burną": {tikslas:"Tinkamas maitinimas", intervencijos:["PEG perrišimas","Pagalba maitinantis"]},
-"Pragulos": {tikslas:"Mažinti pažeidimus", intervencijos:["Keisti padėtį kas 3h","Naudoti pagalbines priemones","Pragulos perrišimas"]},
-"Odos vientisumo pažeidimas (žaizda)": {tikslas:"Pagerinti žaizdos būklę", intervencijos:["Žaizdos perrišimas","Stebėti infekciją"]},
-"Ūmus/chroniškas skausmas": {tikslas:"Sumažinti ar pašalinti skausmą", intervencijos:["Savalaikis nuskausminimas","Skausmo stebėjimas"]}
+    "Kvėpavimo takai su tracheostominiu vamzdžiu": [
+        "Savalaikis atsiurbimas iš tracheostominio vamzdelio",
+        "Vamzdelio drėkinimas"
+    ],
+    "Nedidelis kraujavimas iš nosies": [
+        "AKS stebėjimas kraujavimui nestojant",
+        "Pacientas apmokintas kaip prižiūrėti nosį kai kraujavimas sustos"
+    ],
+    "Sutrikusi kvėpavimo funkcija (dusulys)": [
+        "SpO₂ stebėjimas",
+        "Prireikus O₂ skyrimas pagal SpO₂"
+    ],
+    "Neefektyvi dujų apykaita": [
+        "SpO₂ stebėjimas",
+        "O₂ skyrimas ir reguliavimas pagal SpO₂ duomenis"
+    ],
+    "Pažemėjęs kraujo spaudimas": [
+        "Patarta neskubėti keltis iš lovos ir pasėdėti nuleidus kojas prieš einant",
+        "Stebėjimas dėl galimų griuvimų"
+    ],
+    "Padidėjęs kraujo spaudimas": [
+        "AKS tolimesnis sekimas kas 4 val."
+    ],
+    "Sutrikusi mityba per burną": [
+        "PEG perrišimas",
+        "Pagalba maitinantis"
+    ],
+    "Rizika griuvimui dėl pagalbos poreikio": [
+        "Stebėti dėl griuvimų rizikos"
+    ],
+    "Rizika praguloms dėl lovos režimo": [
+        "Paciento padėties keitimas kas 3 valandas",
+        "Pakišamų indų naudojimas / sauskelnės",
+        "Pagalbinių priemonių naudojimas",
+        "Odos vientisumo stebėjimas dėl pragulų rizikos"
+    ],
+    "Pragulos": [
+        "Paciento kūno padėties keitimas kas 3 valandas",
+        "Pagalbinių priemonių naudojimas",
+        "Pragulos perrišimas"
+    ],
+    "Odos vientisumo pažeidimas (žaizda)": [
+        "Žaizdos perrišimas",
+        "Stebėjimas dėl infekcijos"
+    ],
+    "Ūmus/chroniškas skausmas": [
+        "Savalaikis nuskausminimas"
+    ],
+    "Padidėjusi temperatūra": [
+        "Temperatūros stebėjimas"
+    ],
+    "Hipotermija": [
+        "Šilumos palaikymas",
+        "Temperatūros stebėjimas"
+    ]
 };
 
+let lastPayload = null;
+
 function generateResults() {
-let f=document.forms['nursingForm'];
-let esamos=[], galimos=[];
+    let f = document.forms['nursingForm'];
+    let esamos = [];
+    let galimos = [];
 
-// KVĖPAVIMAS
-if(f['trach'].value==="taip"){esamos.push("Kvėpavimo takai su tracheostominiu vamzdžiu"); galimos.push("Rizika infekcijai trachėjos srityje");}
-if(f['sekretas_trach'].value==="taip") galimos.push("Rizika kvėpavimo takų obstrukcijai");
-if(f['siurbimas'].value==="taip") esamos.push("Atliekamas sekreto siurbimas");
-if(f['nosis'].value==="tamponuota") esamos.push("Apsunkintas kvėpavimas per nosį");
-if(f['nosis'].value==="istraukti") esamos.push("Nedidelis kraujavimas iš nosies");
-if(f['dusulys'].value==="taip") esamos.push("Sutrikusi kvėpavimo funkcija (dusulys)");
-if(f['saturacija'].value && f['saturacija'].value<90){esamos.push("Neefektyvi dujų apykaita"); galimos.push("Rizika hipoksemijai");}
-if(f['kosulys'].value==="dregnas") galimos.push("Rizika aspiracijai dėl sekreto");
+    // SPo2 logika: <95
+    if(f['saturacija'].value && f['saturacija'].value < 95){
+        esamos.push("Neefektyvi dujų apykaita");
+    }
 
-// ŠIRDIES IR KRAUJOTAKA
-let sys=parseInt(f['sistolinis'].value), dia=parseInt(f['diastolinis'].value);
-if(sys && dia) {
-if(sys<100 || dia<80) esamos.push("Pažemėjęs kraujo spaudimas");
-else if(sys>139 || dia>95) esamos.push("Padidėjęs kraujo spaudimas");
+    // Temperatūros logika
+    let temp = parseFloat(f['temperatura'].value);
+    if(temp){
+        if(temp >= 37.1){ esamos.push("Padidėjusi temperatūra"); }
+        if(temp < 36.0){ esamos.push("Hipotermija"); }
+    }
+
+    if(f['trach'].value==="taip"){esamos.push("Kvėpavimo takai su tracheostominiu vamzdžiu");}
+    if(f['nosis'].value==="istraukti"){esamos.push("Nedidelis kraujavimas iš nosies");}
+    if(f['dusulys'].value==="taip"){esamos.push("Sutrikusi kvėpavimo funkcija (dusulys)");}
+    let sys=parseInt(f['sistolinis'].value), dia=parseInt(f['diastolinis'].value);
+    if(sys && dia){
+        if(sys<100 || dia<80) esamos.push("Pažemėjęs kraujo spaudimas");
+        if(sys>139 || dia>95) esamos.push("Padidėjęs kraujo spaudimas");
+    }
+    if(f['mityba'].value!=="burna"){esamos.push("Sutrikusi mityba per burną");}
+    if(f['mobilumas'].value==="lova"){galimos.push("Rizika praguloms dėl lovos režimo");}
+    if(f['mobilumas'].value==="pagalba"){galimos.push("Rizika griuvimui dėl pagalbos poreikio");}
+    if(f['pragulos'].value==="yra"){esamos.push("Pragulos");}
+    if(f['zaizdos'].value==="yra"){let apr=f['zaizdos_text'].value.trim();esamos.push("Odos vientisumo pažeidimas (žaizda)"+(apr?" – "+apr:""));}
+    if(f['skausmas'].value==="taip"){let val=f['skausmoLygis'].value;esamos.push(`Ūmus/chroniškas skausmas${val?" ("+val+"/10)":""}`);}
+
+    let html = `<h3>Esamos problemos</h3><ul>${esamos.length?esamos.map(p=>`<li>${p}</li>`).join(''):"<li>Nepastebėta</li>"}</ul>`;
+    html += `<h3>Galimos problemos</h3><ul>${galimos.length?galimos.map(p=>`<li>${p}</li>`).join(''):"<li>Nepastebėta</li>"}</ul>`;
+
+    html += "<h3>Slaugos planas</h3>";
+    esamos.concat(galimos).forEach(p=>{
+        let key = Object.keys(slaugosPlanas).find(k=>p.startsWith(k));
+        if(key){
+            html += `<div class="planas"><h4>${p}</h4><ul>`;
+            slaugosPlanas[key].forEach(i=>html += `<li>${i}</li>`);
+            html += `</ul></div>`;
+        }
+    });
+
+    // Gyvybiniai rodikliai gale
+    html += "<h3>Įvesti gyvybiniai rodikliai</h3>";
+    html += `<p><strong>SpO₂:</strong> ${f['saturacija'].value || '-'} %<br>`;
+    html += `<strong>AKS:</strong> ${f['sistolinis'].value || '-'} / ${f['diastolinis'].value || '-'} mmHg<br>`;
+    html += `<strong>Širdies susitraukimų dažnis:</strong> ${f['pulsas'].value || '-'} / min<br>`;
+    html += `<strong>Temperatūra:</strong> ${f['temperatura'].value || '-'} °C</p>`;
+
+    html += `<button onclick="keltiISistema()">Kelti į sistemą</button>`;
+    document.getElementById('results').innerHTML = html;
+
+    lastPayload = {
+        data: new Date().toLocaleString(),
+        palata: f['palata'].value,
+        lova: f['lova'].value,
+        esamos: esamos.join("; "),
+        galimos: galimos.join("; "),
+        spo2: f['saturacija'].value,
+        aks: `${f['sistolinis'].value} / ${f['diastolinis'].value}`,
+        pulsas: f['pulsas'].value,
+        temperatura: f['temperatura'].value
+    };
 }
-let temp=parseFloat(f['temperatura'].value);
-if(temp){ if(temp>=37.5){esamos.push("Karščiavimas (hipertermija)"); galimos.push("Rizika infekcijai");}
-if(temp<36.0) esamos.push("Hipotermija");}
-if(f['svaigimas'].value==="taip") galimos.push("Rizika griuvimui");
 
-// MITYBA
-if(f['mityba'].value!=="burna"){esamos.push("Sutrikusi mityba per burną"); galimos.push("Rizika aspiracijai");}
-if(f['rijimas'].value==="taip") esamos.push("Rijimo sutrikimas");
-if(f['suvalgo'].value==="dalis" || f['suvalgo'].value==="ne") galimos.push("Rizika nepakankamam maitinimui");
-
-// ŠALINIMAS
-if(f['kateteris'].value==="yra") galimos.push("Rizika šlapimo takų infekcijai");
-if(f['viduriai'].value==="taip") esamos.push("Vidurių užkietėjimas");
-if(f['viduriavimas'].value==="taip") esamos.push("Viduriavimas, rizika skysčių trūkumui");
-
-// JUDĖJIMAS
-if(f['mobilumas'].value==="lova"){galimos.push("Rizika praguloms dėl lovos režimo"); galimos.push("Rizika tromboembolijai");}
-if(f['mobilumas'].value==="pagalba") galimos.push("Rizika griuvimui dėl pagalbos poreikio");
-
-// MIEGAS
-if(f['miegas'].value==="sutrikusi") esamos.push("Miego sutrikimas");
-
-// ODA
-if(f['pragulos'].value==="yra") esamos.push("Pragulos");
-if(f['zaizdos'].value==="yra"){let apr=f['zaizdos_text'].value.trim(); esamos.push("Odos vientisumo pažeidimas (žaizda)"+(apr?" – "+apr:""));}
-
-// SKAUSMAS
-if(f['skausmas'].value==="taip"){ let intensyvumas=f['skausmoLygis'].value;
-esamos.push(`Ūmus/chroniškas skausmas${intensyvumas?" ("+intensyvumas+"/10)":""}`);}
-
-// IŠVEDAM
-let html=`<h2>Palata ${f['palata'].value||'-'}, Lova ${f['lova'].value||'-'}</h2>`;
-html+="<h3>Esamos problemos:</h3><ul>"+(esamos.length?esamos.map(p=>`<li>${p}</li>`).join(''):"<li>Nepastebėta</li>")+"</ul>";
-html+="<h3>Galimos (rizikos) problemos:</h3><ul>"+(galimos.length?galimos.map(p=>`<li>${p}</li>`).join(''):"<li>Nepastebėta</li>")+"</ul>";
-
-html+="<h3>Slaugos planas</h3>";
-esamos.forEach(problem=>{
-let key=Object.keys(slaugosPlanas).find(k=>problem.startsWith(k));
-if(key){
-html+=`<div class="planas"><h4>${problem}</h4><strong>Tikslas:</strong> ${slaugosPlanas[key].tikslas}<br><strong>Intervencijos:</strong><ul>`;
-slaugosPlanas[key].intervencijos.forEach(i=>{html+=`<li>${i}</li>`;});
-html+="</ul></div>";
-}
-});
-
-document.getElementById('results').innerHTML=html;
+function keltiISistema(){
+    if(!lastPayload){alert("Pirmiausia sugeneruokite rezultatą.");return;}
+    fetch(GOOGLE_SCRIPT_URL,{
+        method:"POST",
+        mode:"no-cors",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(lastPayload)
+    }).then(()=>{
+        alert("Duomenys išsiųsti į Google Sheets!");
+    }).catch(err=>{
+        console.error(err);
+        alert("Klaida siunčiant į Google Sheets.");
+    });
 }
 </script>
+
 </body>
 </html>
