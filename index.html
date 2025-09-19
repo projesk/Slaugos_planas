@@ -338,6 +338,87 @@ function calcMAP(sys, dia){
   if(sys==null || dia==null) return null;
   return Math.round(((2*dia)+sys)/3);
 }
+// ----- pagalba formuoti tekstus viename lauke 'irasas'
+function vitalsText(spo2, sys, dia, map, hr, temp){
+  const aks = (sys!=null && dia!=null) ? `${sys}/${dia} mmHg${map!=null?` (MAP ${map})`:''}` : '-';
+  const T = (temp!=null) ? `${Number(temp).toFixed(1)} °C` : '-';
+  return [
+    `SpO₂: ${spo2!=null? spo2+' %' : '-'}`,
+    `AKS: ${aks}`,
+    `ŠSD: ${hr!=null? hr+'/min' : '-'}`,
+    `Temperatūra: ${T}`
+  ].join('\n');
+}
+
+function buildPlanText(allProblems, planMap){
+  const blocks = [];
+  allProblems.forEach(p => {
+    const key = Object.keys(planMap).find(k => p.startsWith(k));
+    if (key) {
+      const items = planMap[key].map(i => `• ${i}`).join('\n');
+      blocks.push(`${p}\n${items}`);
+    }
+  });
+  return blocks.join('\n\n') || '-';
+}
+
+function makeSingleCellRecord(f, esamos, galimos, spo2, sys, dia, map, hr, temp){
+  const esamosText  = esamos.length ? esamos.join('; ') : '-';
+  const galimosText = galimos.length ? galimos.join('; ') : '-';
+  const planText = buildPlanText([...esamos, ...galimos], slaugosPlanas);
+  const irasas =
+    `Gyvybiniai rodikliai:\n${vitalsText(spo2, sys, dia, map, hr, temp)}\n\n` +
+    `Slaugos problemos:\n${esamosText}\n\n` +
+    `Galimos problemos:\n${galimosText}\n\n` +
+    `Slaugos planas:\n${planText}`;
+
+  return {
+    data: new Date().toISOString(),
+    palata: f["palata"].value.trim(),
+    lova: f["lova"].value.trim(),
+    irasas
+  };
+}
+// === VIENA EILUTĖ Į SHEETS: pagalbinės funkcijos (įklijuoti virš generateResults) ===
+function vitalsText(spo2, sys, dia, map, hr, temp){
+  const aks = (sys!=null && dia!=null) ? `${sys}/${dia} mmHg${map!=null?` (MAP ${map})`:''}` : '-';
+  const T = (temp!=null) ? `${Number(temp).toFixed(1)} °C` : '-';
+  return [
+    `SpO₂: ${spo2!=null? spo2+' %' : '-'}`,
+    `AKS: ${aks}`,
+    `ŠSD: ${hr!=null? hr+'/min' : '-'}`,
+    `Temperatūra: ${T}`
+  ].join('\n');
+}
+function buildPlanText(allProblems, planMap){
+  const blocks = [];
+  allProblems.forEach(p => {
+    const key = Object.keys(planMap).find(k => p.startsWith(k));
+    if (key) {
+      const items = planMap[key].map(i => `• ${i}`).join('\n');
+      blocks.push(`${p}\n${items}`);
+    }
+  });
+  return blocks.join('\n\n') || '-';
+}
+function makeSingleCellRecord(f, esamos, galimos, spo2, sys, dia, map, hr, temp){
+  const esamosText  = esamos.length ? esamos.join('; ') : '-';
+  const galimosText = galimos.length ? galimos.join('; ') : '-';
+  const planText = buildPlanText([...esamos, ...galimos], slaugosPlanas);
+  const irasas =
+    `Gyvybiniai rodikliai:\n${vitalsText(spo2, sys, dia, map, hr, temp)}\n\n` +
+    `Slaugos problemos:\n${esamosText}\n\n` +
+    `Galimos problemos:\n${galimosText}\n\n` +
+    `Slaugos planas:\n${planText}`;
+
+  return {
+    data: new Date().toISOString(),
+    palata: f["palata"].value.trim(),
+    lova: f["lova"].value.trim(),
+    irasas
+  };
+}
+// === /pagalbinės ===
 
 function generateResults(){
   // paslėpti status
@@ -454,37 +535,8 @@ function generateResults(){
 
   // ——— Paruošti payload
   lastPayload = {
-    data: new Date().toISOString(),
-    palata: f["palata"].value.trim(),
-    lova: f["lova"].value.trim(),
-    trach: f["trach"].value,
-    sekretas_trach: f["sekretas_trach"].value,
-    siurbimas: f["siurbimas"].value,
-    nosis: f["nosis"].value,
-    dusulys: f["dusulys"].value,
-    saturacija: spo2,
-    kosulys: f["kosulys"].value,
-    sistolinis: sys,
-    diastolinis: dia,
-    MAP: map,
-    pulsas: hr,
-    temperatura: temp,
-    svaigimas: f["svaigimas"].value,
-    mityba: f["mityba"].value,
-    rijimas: f["rijimas"].value,
-    suvalgo: f["suvalgo"].value,
-    kateteris: f["kateteris"].value,
-    viduriai: f["viduriai"].value,
-    viduriavimas: f["viduriavimas"].value,
-    mobilumas: f["mobilumas"].value,
-    miegas: f["miegas"].value,
-    pragulos: f["pragulos"].value,
-    zaizdos: f["zaizdos"].value,
-    zaizdos_text: f["zaizdos_text"].value.trim(),
-    skausmas: f["skausmas"].value,
-    skausmoLygis: hasPain ? painVal : null,
-    esamos: esamos.join("; "),
-    galimos: galimos.join("; ")
+    // — Paruošti payload (viena eilutė į Sheets)
+lastPayload = makeSingleCellRecord(f, esamos, galimos, spo2, sys, dia, map, hr, temp);
   };
 
   // parodyti JSON žemiau (naudinga testams)
@@ -494,29 +546,26 @@ function generateResults(){
 }
 
 function keltiISistema(){
-  if(!lastPayload){
-    alert("Pirmiausia sugeneruokite rezultatą.");
-    return;
-  }
+  if(!lastPayload){ alert("Pirmiausia sugeneruokite rezultatą."); return; }
   const url = GOOGLE_SCRIPT_URL.trim();
-  if(!url || url==="ĮRAŠYK_SAVO_WEBAPP_URL"){
-    alert("Įrašykite teisingą Google Apps Script WebApp URL.");
+  if(!url || !url.endsWith('/exec')){
+    alert("Patikrinkite WebApp URL – turi baigtis /exec.");
     return;
   }
   fetch(url, {
     method: "POST",
-    headers: {"Content-Type":"application/json"},
+    headers: {"Content-Type": "text/plain"}, // paprasta užklausa, be preflight
     body: JSON.stringify(lastPayload),
-    // jei WebApp grąžina CORS antraštes, galima naudoti 'cors'; kitaip naudokite 'no-cors'
-    mode: "cors"
-  }).then(async (r)=>{
-    if(!r.ok) throw new Error("HTTP "+r.status);
-    $("statusErr").style.display="none";
-    $("statusOk").style.display="block";
-  }).catch(err=>{
+    mode: "no-cors" // atsakymo neskaitysim, bet įrašys
+  })
+  .then(()=>{
+    document.getElementById("statusErr")?.style && (document.getElementById("statusErr").style.display="none");
+    document.getElementById("statusOk")?.style && (document.getElementById("statusOk").style.display="block");
+  })
+  .catch(err=>{
     console.error(err);
-    $("statusOk").style.display="none";
-    $("statusErr").style.display="block";
+    document.getElementById("statusOk")?.style && (document.getElementById("statusOk").style.display="none");
+    document.getElementById("statusErr")?.style && (document.getElementById("statusErr").style.display="block");
   });
 }
 
@@ -566,5 +615,6 @@ function escapeHtml(s){
 </script>
 </body>
 </html>
+
 
 
