@@ -468,8 +468,19 @@ function generateResults(){
   </div>`;
   $("results").innerHTML = html;
 
-  // VIENOS CELĖS PAYLOAD → Sheets
-  lastPayload = makeSingleCellRecord(f, esamos, galimos, spo2, sys, dia, map, hr, temp);
+  // 4 tekstai į atskirus stulpelius
+const gyvybiniai = vitalsText(spo2, sys, dia, map, hr, temp);
+const slaugosProb = esamos.length ? esamos.join('; ') : '-';
+const galimosProb = galimos.length ? galimos.join('; ') : '-';
+const planasText = buildPlanText([...esamos, ...galimos], slaugosPlanas);
+
+lastPayload = {
+  "Gyvybiniai rodikliai": gyvybiniai,
+  "Slaugos problemos": slaugosProb,
+  "Galimos problemos": galimosProb,
+  "Slaugos planas": planasText
+};
+
 
   // Debug dėžutė (gali ištrinti jei nereikia)
   $("results").insertAdjacentHTML("beforeend",
@@ -525,4 +536,5 @@ function tryClose(){ window.close(); }
 </script>
 </body>
 </html>
+
 
