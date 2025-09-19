@@ -22,8 +22,6 @@
   button{padding:10px 14px;border:none;border-radius:10px;background:var(--accent);color:#fff;cursor:pointer;font-weight:600}
   button.secondary{background:#fff;color:#111;border:1px solid var(--line)}
   button.good{background:var(--ok)}
-  button.warn{background:var(--warn);color:#111}
-  button.bad{background:var(--bad)}
   .results{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-top:18px}
   .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;border:1px solid var(--line);margin:3px 6px 0 0;background:#fff}
   .pill.ok{border-color:#16a34a33;background:#16a34a18}
@@ -31,7 +29,6 @@
   .pill.bad{border-color:#dc262633;background:#dc262618}
   .planas{border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:10px;background:#fff}
   .planas h4{margin:0 0 8px}
-  .kudos{padding:10px;border:1px dashed var(--line);border-radius:10px;background:#fafafa;font-size:13px;color:#muted;margin-top:10px}
   .status{padding:10px;border-radius:10px;margin-top:10px;display:none}
   .status.ok{display:block;background:#ecfdf5;border:1px solid #86efac;color:#065f46}
   .status.err{display:block;background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d}
@@ -237,11 +234,24 @@
       </div>
       <div class="hint">Jei „Yra skausmas“, įveskite skaičių 0–10 (NRS).</div>
     </div>
+
+    <!-- KRAUJAVIMO RIZIKA (NAUJAS) -->
+    <div class="section">
+      <h2>Kraujavimo rizika</h2>
+      <label for="kraujavimo_rizika">Kraujavimo rizika?
+        <select id="kraujavimo_rizika" name="kraujavimo_rizika">
+          <option value="nera">Nėra</option>
+          <option value="yra">Yra</option>
+        </select>
+      </label>
+      <div class="hint">Jei „Yra“ – prie galimų problemų bus pridėta „Kraujavimo rizika“ ir plane: „Stebėjimas dėl galimo kraujavimo“, „AKS sekimas“.</div>
+    </div>
   </div>
 
   <div class="actions">
-    <button type="button" id="genBtn" onclick="generateResults()">Generuoti</button>
-    <button type="button" class="secondary" id="resetBtn">Naujas pacientas</button>
+    <button type="button" onclick="generateResults()">Generuoti</button>
+    <button type="button" class="secondary" onclick="resetForm()">Naujas pacientas</button>
+    <button type="button" class="good" onclick="keltiISistema()">Kelti į sistemą</button>
   </div>
 </form>
 
@@ -252,7 +262,7 @@
 
 <script>
 /* ───────────────── KONFIGŪRA ───────────────── */
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxALQwkqWw44yPMKzwFzr1XAeUxYsJQWEOEhU0gf72kYfUNENl0cp6zYS2fJfWgl7Ogog/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdY_81qTAdtJsO1MbFYX7OWjkb6wDEQ2cFWQq6slkqQSh605qleMlGIYiqQCyRYf8Wvg/exec";
 
 /* ───────────────── SLAUGOS PLANŲ ŽEMĖLAPIS ───────────────── */
 const slaugosPlanas = {
@@ -310,10 +320,14 @@ const slaugosPlanas = {
   "Hipotermija": [
     "Šilumos palaikymas",
     "Temperatūros stebėjimas"
+  ],
+  "Kraujavimo rizika": [
+    "Stebėjimas dėl galimo kraujavimo",
+    "AKS sekimas"
   ]
 };
 
-/* ───────────────── BENDROS PAGALBINĖS ───────────────── */
+/* ───────────────── PAGALBINĖS ───────────────── */
 let lastPayload = null;
 const $ = (id) => document.getElementById(id);
 
@@ -327,7 +341,6 @@ function classifyPill(text, severity="ok"){
   return `<span class="${cls}">${text}</span>`;
 }
 
-/* ───────────────── VIENOS CELĖS ĮRAŠO FORMAVIMAS ───────────────── */
 function vitalsText(spo2, sys, dia, map, hr, temp){
   const aks = (sys!=null && dia!=null) ? `${sys}/${dia} mmHg${map!=null?` (MAP ${map})`:''}` : '-';
   const T = (temp!=null) ? `${Number(temp).toFixed(1)} °C` : '-';
@@ -338,35 +351,22 @@ function vitalsText(spo2, sys, dia, map, hr, temp){
     `Temperatūra: ${T}`
   ].join('\n');
 }
-function buildPlanText(allProblems, planMap){
-  const blocks = [];
+
+// BE PASIKARTOJIMŲ
+function buildPlanTextAggregated(allProblems, planMap){
+  const seen = new Set();
+  const out = [];
   allProblems.forEach(p => {
     const key = Object.keys(planMap).find(k => p.startsWith(k));
-    if (key) {
-      const items = planMap[key].map(i => `• ${i}`).join('\n');
-      blocks.push(`${p}\n${items}`);
-    }
+    if (!key) return;
+    planMap[key].forEach(item => {
+      if (!seen.has(item)) { seen.add(item); out.push(`• ${item}`); }
+    });
   });
-  return blocks.join('\n\n') || '-';
-}
-function makeSingleCellRecord(f, esamos, galimos, spo2, sys, dia, map, hr, temp){
-  const esamosText  = esamos.length ? esamos.join('; ') : '-';
-  const galimosText = galimos.length ? galimos.join('; ') : '-';
-  const planText = buildPlanText([...esamos, ...galimos], slaugosPlanas);
-  const irasas =
-    `Gyvybiniai rodikliai:\n${vitalsText(spo2, sys, dia, map, hr, temp)}\n\n` +
-    `Slaugos problemos:\n${esamosText}\n\n` +
-    `Galimos problemos:\n${galimosText}\n\n` +
-    `Slaugos planas:\n${planText}`;
-  return {
-    data: new Date().toISOString(),
-    palata: f["palata"].value.trim(),
-    lova: f["lova"].value.trim(),
-    irasas
-  };
+  return out.length ? out.join('\n') : '-';
 }
 
-/* ───────────────── ĮVYKIŲ KLAUSYTOJAI ───────────────── */
+/* ───────────────── UI VEIKSMAI ───────────────── */
 $("zaizdos").addEventListener("change", (e)=>{
   $("zaizdos_aprasymas").style.display = e.target.value === "yra" ? "block" : "none";
 });
@@ -374,10 +374,7 @@ $("skausmas").addEventListener("change", (e)=>{
   const need = e.target.value === "taip";
   $("skausmoLygis").toggleAttribute("required", need);
 });
-$("genBtn").addEventListener("click", generateResults);
-$("resetBtn").addEventListener("click", resetForm);
 
-/* ───────────────── PAGRINDINĖ: GENERAVIMAS ───────────────── */
 function generateResults(){
   const ok = $("statusOk"); if(ok) ok.style.display="none";
   const er = $("statusErr"); if(er) er.style.display="none";
@@ -440,55 +437,68 @@ function generateResults(){
     const sev = val>=7 ? "bad" : val>=4 ? "warn" : "ok";
     pills.push(classifyPill(`Skausmas ${val}/10`, sev));
   }
+  // NAUJAS: kraujavimo rizika
+  if(f["kraujavimo_rizika"].value==="yra"){
+    galimos.push("Kraujavimo rizika");
+  }
 
-  // UI
+  // ---- paruošti UI
+  // dedup + rikiuoti
+  const uniq = a => [...new Set(a)].filter(Boolean);
+  const esamosU  = uniq(esamos).sort();
+  const galimosU = uniq(galimos).sort();
+
   let html = "";
-  if(pills.length) html += `<div class="kudos"><strong>Greita santrauka:</strong> ${pills.join(" ")}</div>`;
-  html += `<h3>Esamos problemos</h3><ul>${esamos.length?esamos.map(p=>`<li>${escapeHtml(p)}</li>`).join(""):"<li>Nepastebėta</li>"}</ul>`;
-  html += `<h3>Galimos problemos</h3><ul>${galimos.length?galimos.map(p=>`<li>${escapeHtml(p)}</li>`).join(""):"<li>Nepastebėta</li>"}</ul>`;
+  if(pills.length) html += `<div class="hint"><strong>Greita santrauka:</strong> ${pills.join(" ")}</div>`;
+  html += `<h3>Esamos problemos</h3><ul>${esamosU.length?esamosU.map(p=>`<li>${escapeHtml(p)}</li>`).join(""):"<li>Nepastebėta</li>"}</ul>`;
+  html += `<h3>Galimos problemos</h3><ul>${galimosU.length?galimosU.map(p=>`<li>${escapeHtml(p)}</li>`).join(""):"<li>Nepastebėta</li>"}</ul>`;
+
   html += `<h3>Slaugos planas</h3>`;
-  [...esamos, ...galimos].forEach(p=>{
+  // sugeneruojam korteles
+  [...esamosU, ...galimosU].forEach(p=>{
     const key = Object.keys(slaugosPlanas).find(k=>p.startsWith(k));
     if(key){
-      html += `<div class="planas"><h4>${escapeHtml(p)}</h4><ul>${slaugosPlanas[key].map(i=>`<li>${escapeHtml(i)}</li>`).join("")}</ul></div>`;
+      html += `<div class="planas"><h4>${escapeHtml(p)}</h4><ul>${
+        slaugosPlanas[key].map(i=>`<li>${escapeHtml(i)}</li>`).join("")
+      }</ul></div>`;
     }
   });
+
   const aksStr = (sys!=null && dia!=null) ? `${sys} / ${dia} mmHg${map!=null?` (MAP ${map})`:''}` : '-';
   html += `<h3>Įvesti gyvybiniai rodikliai</h3>
   <p><strong>SpO₂:</strong> ${valOrDash(spo2)} %<br>
   <strong>AKS:</strong> ${aksStr}<br>
   <strong>ŠSD:</strong> ${valOrDash(hr)} / min<br>
   <strong>Temperatūra:</strong> ${temp!=null?temp.toFixed(1):"-"} °C</p>`;
-  html += `<div class="actions">
-    <button type="button" class="good" onclick="keltiISistema()">Kelti į sistemą</button>
-    <button type="button" class="secondary" onclick="copyPlan()">Kopijuoti planą</button>
-    <button type="button" class="secondary" onclick="printPlan()">Spausdinti</button>
-    <button type="button" class="warn" onclick="downloadPDF()">Atsisiųsti PDF</button>
-    <button type="button" class="secondary" onclick="tryClose()">Uždaryti puslapį</button>
-  </div>`;
+
   $("results").innerHTML = html;
 
-  // 4 tekstai į atskirus stulpelius
-const gyvybiniai = vitalsText(spo2, sys, dia, map, hr, temp);
-const slaugosProb = esamos.length ? esamos.join('; ') : '-';
-const galimosProb = galimos.length ? galimos.join('; ') : '-';
-const planasText = buildPlanText([...esamos, ...galimos], slaugosPlanas);
+  // ---- vienos ląstelės „įrašas“ (2 paveikslas)
+  const gyvybiniai = vitalsText(spo2, sys, dia, map, hr, temp);
+  const slaugosProb = esamosU.length ? esamosU.join('; ') : '-';
+  const galimosProb = galimosU.length ? galimosU.join('; ') : '-';
+  const planasText  = buildPlanTextAggregated([...esamosU, ...galimosU], slaugosPlanas);
 
-lastPayload = {
-  "Gyvybiniai rodikliai": gyvybiniai,
-  "Slaugos problemos": slaugosProb,
-  "Galimos problemos": galimosProb,
-  "Slaugos planas": planasText
-};
+  const irasas =
+    `Gyvybiniai rodikliai:\n${gyvybiniai}\n\n` +
+    `Slaugos problemos:\n${slaugosProb}\n\n` +
+    `Galimos problemos:\n${galimosProb}\n\n` +
+    `Slaugos planas:\n${planasText}`;
 
+  // SIUNČIAME 4 RAKTUS: Laikas | palata | lova | įrašas
+  lastPayload = {
+    "Laikas": new Date().toLocaleString('lt-LT'),
+    "palata": f["palata"].value.trim(),
+    "lova":   f["lova"].value.trim(),
+    "įrašas": irasas
+  };
 
-  // Debug dėžutė (gali ištrinti jei nereikia)
+  // (nebūtina) debug dėžutė
   $("results").insertAdjacentHTML("beforeend",
-    `<div class="mono" id="payloadBox">${escapeHtml(JSON.stringify(lastPayload,null,2))}</div>`
+    `<div class="mono">${escapeHtml(JSON.stringify(lastPayload,null,2))}</div>`
   );
 }
 
-/* ───────────────── SIUNTIMAS Į GAS ───────────────── */
 function keltiISistema(){
   if(!lastPayload){ alert("Pirmiausia sugeneruokite rezultatą."); return; }
   const url = GOOGLE_SCRIPT_URL.trim();
@@ -496,9 +506,9 @@ function keltiISistema(){
 
   fetch(url, {
     method: "POST",
-    headers: {"Content-Type": "text/plain"}, // paprasta užklausa, be preflight
+    headers: {"Content-Type": "text/plain"},
     body: JSON.stringify(lastPayload),
-    mode: "no-cors" // atsakymo neskaitysim, bet įrašys
+    mode: "no-cors"
   })
   .then(()=>{
     const ok = $("statusOk"); if(ok) ok.style.display="block";
@@ -511,32 +521,14 @@ function keltiISistema(){
   });
 }
 
-/* ───────────────── KITI MYGTUKAI ───────────────── */
 function resetForm(){
   $("nursingForm").reset();
   $("results").innerHTML = "";
-  const ok = $("statusOk"); if(ok) ok.style.display="none";
-  const er = $("statusErr"); if(er) er.style.display="none";
+  $("statusOk").style.display="none";
+  $("statusErr").style.display="none";
   $("zaizdos_aprasymas").style.display="none";
   lastPayload = null;
 }
-function copyPlan(){
-  const box = $("results");
-  if(!box.textContent.trim()){ alert("Nėra ką kopijuoti."); return; }
-  const tmp = document.createElement("textarea");
-  tmp.value = box.innerText.replace(/\n{3,}/g,"\n\n");
-  document.body.appendChild(tmp);
-  tmp.select(); document.execCommand("copy");
-  tmp.remove();
-  alert("Planą nukopijavau į iškarpinę.");
-}
-function printPlan(){ window.print(); }
-function downloadPDF(){ alert("Naudokite naršyklės „Spausdinti“ → „Išsaugoti kaip PDF“."); }
-function tryClose(){ window.close(); }
 </script>
 </body>
 </html>
-
-
-
-
