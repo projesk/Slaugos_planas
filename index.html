@@ -14,10 +14,10 @@
   .section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
   .section h2{font-size:18px;margin:0 0 10px;padding-bottom:8px;border-bottom:1px dashed var(--line)}
   label{display:block;margin-top:8px;font-weight:600}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .hint{font-weight:400;color:var(--muted);font-size:12px}
   select,input,textarea{padding:10px;border:1px solid var(--line);border-radius:8px;width:100%;margin-top:6px;background:#fff}
   textarea{min-height:84px;resize:vertical}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
   button{padding:10px 14px;border:none;border-radius:10px;background:var(--accent);color:#fff;cursor:pointer;font-weight:600}
   button.secondary{background:#fff;color:#111;border:1px solid var(--line)}
@@ -33,6 +33,9 @@
   .status.ok{display:block;background:#ecfdf5;border:1px solid #86efac;color:#065f46}
   .status.err{display:block;background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d}
   .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px;white-space:pre-wrap;background:#0b1220;color:#e5e7eb;border-radius:10px;padding:12px;margin-top:12px;overflow:auto}
+  .checks{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px}
+  .checks label{display:flex;align-items:center;font-weight:500;margin:0}
+  .checks input{margin-right:8px;width:auto}
 </style>
 </head>
 <body>
@@ -49,6 +52,16 @@
       <label for="lova">Lova
         <input id="lova" name="lova" autocomplete="off" />
       </label>
+    </div>
+
+    <!-- PACIENTO BŪKLĖ (NAUJA) -->
+    <div class="section">
+      <h2>Paciento būklė</h2>
+      <div class="checks">
+        <label><input type="checkbox" id="ramus" /> Ramus</label>
+        <label><input type="checkbox" id="orientuotas" /> Orientuotas</label>
+      </div>
+      <div class="hint">Nežymint šių langelių į įrašą bus įtraukta: <em>„neramus, neorientuotas“</em>.</div>
     </div>
 
     <!-- KVĖPAVIMO SISTEMA -->
@@ -235,7 +248,7 @@
       <div class="hint">Jei „Yra skausmas“, įveskite skaičių 0–10 (NRS).</div>
     </div>
 
-    <!-- KRAUJAVIMO RIZIKA (NAUJAS) -->
+    <!-- KRAUJAVIMO RIZIKA -->
     <div class="section">
       <h2>Kraujavimo rizika</h2>
       <label for="kraujavimo_rizika">Kraujavimo rizika?
@@ -249,8 +262,8 @@
   </div>
 
   <div class="actions">
-    <button type="button" onclick="generateResults()">Generuoti</button>
-    <button type="button" class="secondary" onclick="resetForm()">Naujas pacientas</button>
+    <button type="button" id="genBtn" onclick="generateResults()">Generuoti</button>
+    <button type="button" id="resetBtn" class="secondary">Naujas pacientas</button>
     <button type="button" class="good" onclick="keltiISistema()">Kelti į sistemą</button>
   </div>
 </form>
@@ -261,10 +274,21 @@
 <div id="statusErr" class="status err">❌ Klaida siunčiant į Google Sheets. Patikrinkite WebApp adresą ir leidimus.</div>
 
 <script>
-/* ───────────────── KONFIGŪRA ───────────────── */
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxODAbmdrmccCYCUkswsFgnz-nrC8clEQQf-5kId3y-3TCqUwsU4pyCze2Jojv43VV_1A/exec";
+/* ───────── KLAIDŲ GAUDYMAS IR „SAFETY“ PRISIRIŠIMAI ───────── */
+window.addEventListener('error', e => alert('JS klaida: ' + e.message));
+const $ = (id) => document.getElementById(id);
+function onReady(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
+onReady(() => {
+  $('zaizdos')?.addEventListener('change', e => { $('zaizdos_aprasymas').style.display = e.target.value === 'yra' ? 'block' : 'none'; });
+  $('skausmas')?.addEventListener('change', e => { $('skausmoLygis')?.toggleAttribute('required', e.target.value === 'taip'); });
+  $('resetBtn')?.addEventListener('click', resetForm);
+});
 
-/* ───────────────── SLAUGOS PLANŲ ŽEMĖLAPIS ───────────────── */
+/* ───────── KONFIGŪRA ───────── */
+// ĮKLIJUOK SAVO /exec URL ŽEMIAU:
+const GOOGLE_SCRIPT_URL = "PASTE_YOUR_WEBAPP_EXEC_URL_HERE";
+
+/* ───────── SLAUGOS PLANŲ ŽEMĖLAPIS ───────── */
 const slaugosPlanas = {
   "Kvėpavimo takai su tracheostominiu vamzdžiu": [
     "Savalaikis atsiurbimas iš tracheostominio vamzdelio",
@@ -289,23 +313,24 @@ const slaugosPlanas = {
   "Padidėjęs kraujo spaudimas": [
     "AKS sekimas kas 4 val."
   ],
- "Sutrikusi mityba per burną": [
-  "Stebėjimas dėl aspiracijos",
-  "Pagalba valgant",
-  "Reikalui esant maisto tirštinimas"
-],
-"Mityba per zondą (NG)": [
-  "Zondo padėties patikra pagal įstaigos protokolą",
-  "Galvūgalis ≥30–45° maitinimo metu ir 30–60 min po",
-  "Zondo praplovimas prieš ir po maitinimo bei vaistų",
-  "Nosies ir odos prie zondo priežiūra, fiksacijos patikra",
-  "Stebėti dėl aspiracijos, pykinimo, pilvo pūtimo"
-],
-"Mityba per PEG": [
-  "PEG vietos apžiūra ir tvarsčio keitimas",
-  "Praplovimas prieš ir po maitinimo bei vaistų",
-  "Galvūgalis ≥30–45° maitinimo metu ir 30–60 min po"
-],
+  /* MITYBA – nauji raktai */
+  "Sutrikusi mityba per burną": [
+    "Stebėjimas dėl aspiracijos",
+    "Pagalba valgant",
+    "Reikalui esant maisto tirštinimas"
+  ],
+  "Mityba per zondą (NG)": [
+    "Zondo padėties patikra pagal įstaigos protokolą",
+    "Galvūgalis ≥30–45° maitinimo metu ir 30–60 min po",
+    "Zondo praplovimas prieš ir po maitinimo bei vaistų",
+    "Nosies ir odos prie zondo priežiūra, fiksacijos patikra",
+    "Stebėti dėl aspiracijos, pykinimo, pilvo pūtimo"
+  ],
+  "Mityba per PEG": [
+    "PEG vietos apžiūra ir tvarsčio keitimas",
+    "Praplovimas prieš ir po maitinimo bei vaistų",
+    "Galvūgalis ≥30–45° maitinimo metu ir 30–60 min po"
+  ],
   "Rizika griuvimui dėl pagalbos poreikio": [
     "Stebėti dėl griuvimų rizikos, kviesti pagalbą judant"
   ],
@@ -340,9 +365,8 @@ const slaugosPlanas = {
   ]
 };
 
-/* ───────────────── PAGALBINĖS ───────────────── */
+/* ───────── PAGALBINĖS ───────── */
 let lastPayload = null;
-const $ = (id) => document.getElementById(id);
 
 function toNum(v){ const n = parseFloat(v); return isFinite(n) ? n : null; }
 function calcMAP(sys, dia){ if(sys==null||dia==null) return null; return Math.round(((2*dia)+sys)/3); }
@@ -357,51 +381,41 @@ function classifyPill(text, severity="ok"){
 function vitalsText(spo2, sys, dia, map, hr, temp){
   const aks = (sys!=null && dia!=null) ? `${sys}/${dia} mmHg${map!=null?` (MAP ${map})`:''}` : '-';
   const T = (temp!=null) ? `${Number(temp).toFixed(1)} °C` : '-';
-  return [
-    `SpO₂: ${spo2!=null? spo2+' %' : '-'}`,
-    `AKS: ${aks}`,
-    `ŠSD: ${hr!=null? hr+'/min' : '-'}`,
-    `Temperatūra: ${T}`
-  ].join('\n');
+  return [`SpO₂: ${spo2!=null? spo2+' %' : '-'}`,
+          `AKS: ${aks}`,
+          `ŠSD: ${hr!=null? hr+'/min' : '-'}`,
+          `Temperatūra: ${T}`].join('\n');
 }
 
-// BE PASIKARTOJIMŲ
+// Slaugos planas be pasikartojimų
 function buildPlanTextAggregated(allProblems, planMap){
-  const seen = new Set();
-  const out = [];
+  const seen = new Set(), out = [];
   allProblems.forEach(p => {
     const key = Object.keys(planMap).find(k => p.startsWith(k));
     if (!key) return;
-    planMap[key].forEach(item => {
-      if (!seen.has(item)) { seen.add(item); out.push(`• ${item}`); }
-    });
+    planMap[key].forEach(item => { if (!seen.has(item)) { seen.add(item); out.push(`• ${item}`); } });
   });
   return out.length ? out.join('\n') : '-';
 }
 
-/* ───────────────── UI VEIKSMAI ───────────────── */
-$("zaizdos").addEventListener("change", (e)=>{
-  $("zaizdos_aprasymas").style.display = e.target.value === "yra" ? "block" : "none";
-});
-$("skausmas").addEventListener("change", (e)=>{
-  const need = e.target.value === "taip";
-  $("skausmoLygis").toggleAttribute("required", need);
-});
-
+/* ───────── PAGRINDINĖ LOGIKA ───────── */
 function generateResults(){
-  const ok = $("statusOk"); if(ok) ok.style.display="none";
-  const er = $("statusErr"); if(er) er.style.display="none";
+  console.log('generateResults() start');
 
-  const f = document.forms["nursingForm"];
+  // paslėpti status
+  $('statusOk').style.display='none';
+  $('statusErr').style.display='none';
+
+  const f = document.forms['nursingForm'];
   const esamos = [];
   const galimos = [];
   const pills = [];
 
-  const spo2 = toNum(f["saturacija"].value);
-  const temp = toNum(f["temperatura"].value);
-  const sys  = toNum(f["sistolinis"].value);
-  const dia  = toNum(f["diastolinis"].value);
-  const hr   = toNum(f["pulsas"].value);
+  const spo2 = toNum(f['saturacija'].value);
+  const temp = toNum(f['temperatura'].value);
+  const sys  = toNum(f['sistolinis'].value);
+  const dia  = toNum(f['diastolinis'].value);
+  const hr   = toNum(f['pulsas'].value);
   const map  = calcMAP(sys, dia);
 
   // SpO2
@@ -417,10 +431,10 @@ function generateResults(){
     else if(temp < 36.0){ esamos.push("Hipotermija"); pills.push(classifyPill(`T ${temp.toFixed(1)}°C (žema)`, "warn")); }
     else pills.push(classifyPill(`T ${temp.toFixed(1)}°C`, "ok"));
   }
-  // Tracheostoma / nosis / dusulys
-  if(f["trach"].value==="taip") esamos.push("Kvėpavimo takai su tracheostominiu vamzdžiu");
-  if(f["nosis"].value==="istraukti") esamos.push("Nedidelis kraujavimas iš nosies");
-  if(f["dusulys"].value==="taip") esamos.push("Sutrikusi kvėpavimo funkcija (dusulys)");
+  // Kvėpavimas / nosis / dusulys
+  if(f['trach'].value==='taip') esamos.push("Kvėpavimo takai su tracheostominiu vamzdžiu");
+  if(f['nosis'].value==='istraukti') esamos.push("Nedidelis kraujavimas iš nosies");
+  if(f['dusulys'].value==='taip') esamos.push("Sutrikusi kvėpavimo funkcija (dusulys)");
   // AKS / MAP / pulsas
   if(sys!=null && dia!=null){
     if(sys < 100 || (map!=null && map < 65)) esamos.push("Pažemėjęs kraujo spaudimas");
@@ -433,57 +447,63 @@ function generateResults(){
     else if(hr<50) pills.push(classifyPill(`Pulsas ${hr}/min (bradikardija)`, "warn"));
     else pills.push(classifyPill(`Pulsas ${hr}/min`, "ok"));
   }
-// ——— Mityba (atskirta: burna, NG, PEG)
-const m = f["mityba"].value;
-if (m === "peg") {
-  esamos.push("Mityba per PEG");
-} else if (m === "zondas") {
-  esamos.push("Mityba per zondą (NG)");
-} else if (m === "burna") {
-  // problemą keliame tik jei yra rijimo sutrikimas ARBA nesuvalgo visko
-  if (f["rijimas"].value === "taip" || f["suvalgo"].value !== "taip") {
-    esamos.push("Sutrikusi mityba per burną");
+
+  // Mityba (atskyrimas)
+  const m = f['mityba'].value;
+  if (m === 'peg') {
+    esamos.push("Mityba per PEG");
+  } else if (m === 'zondas') {
+    esamos.push("Mityba per zondą (NG)");
+  } else if (m === 'burna') {
+    if (f['rijimas'].value === 'taip' || f['suvalgo'].value !== 'taip') {
+      esamos.push("Sutrikusi mityba per burną");
+    }
   }
-}
-  if(f["mobilumas"].value==="lova") galimos.push("Rizika praguloms dėl lovos režimo");
-  if(f["mobilumas"].value==="pagalba") galimos.push("Rizika griuvimui dėl pagalbos poreikio");
-  if(f["pragulos"].value==="yra") esamos.push("Pragulos");
-  if(f["zaizdos"].value==="yra"){
-    const apr = (f["zaizdos_text"].value||"").trim();
+
+  // Judėjimas / oda
+  if(f['mobilumas'].value==='lova') galimos.push("Rizika praguloms dėl lovos režimo");
+  if(f['mobilumas'].value==='pagalba') galimos.push("Rizika griuvimui dėl pagalbos poreikio");
+  if(f['pragulos'].value==='yra') esamos.push("Pragulos");
+  if(f['zaizdos'].value==='yra'){
+    const apr = (f['zaizdos_text'].value||'').trim();
     esamos.push("Odos vientisumo pažeidimas (žaizda)"+(apr?(" – "+apr):""));
   }
+
   // Skausmas
-  if(f["skausmas"].value==="taip"){
-    const val = toNum(f["skausmoLygis"].value);
-    if(val==null || val<0 || val>10){ alert("Įveskite skausmo intensyvumą (0–10)."); $("skausmoLygis").focus(); return; }
+  if(f['skausmas'].value==='taip'){
+    const val = toNum(f['skausmoLygis'].value);
+    if(val==null || val<0 || val>10){ alert("Įveskite skausmo intensyvumą (0–10)."); $('skausmoLygis').focus(); return; }
     esamos.push(`Ūmus/chroniškas skausmas (${val}/10)`);
     const sev = val>=7 ? "bad" : val>=4 ? "warn" : "ok";
     pills.push(classifyPill(`Skausmas ${val}/10`, sev));
   }
-  // NAUJAS: kraujavimo rizika
-  if(f["kraujavimo_rizika"].value==="yra"){
+
+  // Kraujavimo rizika
+  if(f['kraujavimo_rizika'].value==='yra'){
     galimos.push("Kraujavimo rizika");
   }
 
-  // ---- paruošti UI
-  // dedup + rikiuoti
+  // DEDUP + rikiavimas
   const uniq = a => [...new Set(a)].filter(Boolean);
   const esamosU  = uniq(esamos).sort();
   const galimosU = uniq(galimos).sort();
 
+  // Psichologinė būklė (pagal varnelės)
+  const pb_ramus = $('ramus').checked;
+  const pb_orient = $('orientuotas').checked;
+  const psichoTekstas = `${pb_ramus ? 'ramus' : 'neramus'}, ${pb_orient ? 'orientuotas' : 'neorientuotas'}`;
+
+  // UI renderis
   let html = "";
   if(pills.length) html += `<div class="hint"><strong>Greita santrauka:</strong> ${pills.join(" ")}</div>`;
   html += `<h3>Esamos problemos</h3><ul>${esamosU.length?esamosU.map(p=>`<li>${escapeHtml(p)}</li>`).join(""):"<li>Nepastebėta</li>"}</ul>`;
   html += `<h3>Galimos problemos</h3><ul>${galimosU.length?galimosU.map(p=>`<li>${escapeHtml(p)}</li>`).join(""):"<li>Nepastebėta</li>"}</ul>`;
 
   html += `<h3>Slaugos planas</h3>`;
-  // sugeneruojam korteles
   [...esamosU, ...galimosU].forEach(p=>{
     const key = Object.keys(slaugosPlanas).find(k=>p.startsWith(k));
     if(key){
-      html += `<div class="planas"><h4>${escapeHtml(p)}</h4><ul>${
-        slaugosPlanas[key].map(i=>`<li>${escapeHtml(i)}</li>`).join("")
-      }</ul></div>`;
+      html += `<div class="planas"><h4>${escapeHtml(p)}</h4><ul>${slaugosPlanas[key].map(i=>`<li>${escapeHtml(i)}</li>`).join("")}</ul></div>`;
     }
   });
 
@@ -492,11 +512,12 @@ if (m === "peg") {
   <p><strong>SpO₂:</strong> ${valOrDash(spo2)} %<br>
   <strong>AKS:</strong> ${aksStr}<br>
   <strong>ŠSD:</strong> ${valOrDash(hr)} / min<br>
-  <strong>Temperatūra:</strong> ${temp!=null?temp.toFixed(1):"-"} °C</p>`;
+  <strong>Temperatūra:</strong> ${temp!=null?temp.toFixed(1):"-"} °C</p>
+  <p><strong>Paciento psichologinė būklė:</strong> ${escapeHtml(psichoTekstas)}</p>`;
 
-  $("results").innerHTML = html;
+  $('results').innerHTML = html;
 
-  // ---- vienos ląstelės „įrašas“ (2 paveikslas)
+  // Vienos ląstelės „įrašas“ Google Sheets
   const gyvybiniai = vitalsText(spo2, sys, dia, map, hr, temp);
   const slaugosProb = esamosU.length ? esamosU.join('; ') : '-';
   const galimosProb = galimosU.length ? galimosU.join('; ') : '-';
@@ -504,58 +525,45 @@ if (m === "peg") {
 
   const irasas =
     `Gyvybiniai rodikliai:\n${gyvybiniai}\n\n` +
+    `Paciento psichologinė būklė:\n${psichoTekstas}\n\n` +
     `Slaugos problemos:\n${slaugosProb}\n\n` +
     `Galimos problemos:\n${galimosProb}\n\n` +
     `Slaugos planas:\n${planasText}`;
 
-  // SIUNČIAME 4 RAKTUS: Laikas | palata | lova | įrašas
   lastPayload = {
     "Laikas": new Date().toLocaleString('lt-LT'),
-    "palata": f["palata"].value.trim(),
-    "lova":   f["lova"].value.trim(),
+    "palata": f['palata'].value.trim(),
+    "lova":   f['lova'].value.trim(),
     "įrašas": irasas
   };
 
-  // (nebūtina) debug dėžutė
-  $("results").insertAdjacentHTML("beforeend",
-    `<div class="mono">${escapeHtml(JSON.stringify(lastPayload,null,2))}</div>`
-  );
+  // Debug box
+  $('results').insertAdjacentHTML('beforeend', `<div class="mono">${escapeHtml(JSON.stringify(lastPayload,null,2))}</div>`);
 }
 
 function keltiISistema(){
-  if(!lastPayload){ alert("Pirmiausia sugeneruokite rezultatą."); return; }
-  const url = GOOGLE_SCRIPT_URL.trim();
+  if(!lastPayload){ alert("Pirmiausia paspauskite „Generuoti“."); return; }
+  const url = (GOOGLE_SCRIPT_URL||'').trim();
   if(!url || !url.endsWith('/exec')){ alert("Patikrinkite WebApp URL – turi baigtis /exec."); return; }
 
   fetch(url, {
     method: "POST",
-    headers: {"Content-Type": "text/plain"},
+    headers: {"Content-Type": "text/plain"}, // paprasta užklausa
     body: JSON.stringify(lastPayload),
     mode: "no-cors"
   })
-  .then(()=>{
-    const ok = $("statusOk"); if(ok) ok.style.display="block";
-    const er = $("statusErr"); if(er) er.style.display="none";
-  })
-  .catch(err=>{
-    console.error(err);
-    const ok = $("statusOk"); if(ok) ok.style.display="none";
-    const er = $("statusErr"); if(er) er.style.display="block";
-  });
+  .then(()=>{ $('statusErr').style.display='none'; $('statusOk').style.display='block'; })
+  .catch(()=>{ $('statusOk').style.display='none'; $('statusErr').style.display='block'; });
 }
 
 function resetForm(){
-  $("nursingForm").reset();
-  $("results").innerHTML = "";
-  $("statusOk").style.display="none";
-  $("statusErr").style.display="none";
-  $("zaizdos_aprasymas").style.display="none";
+  $('nursingForm').reset();
+  $('results').innerHTML = "";
+  $('statusOk').style.display='none';
+  $('statusErr').style.display='none';
+  $('zaizdos_aprasymas').style.display='none';
   lastPayload = null;
 }
 </script>
 </body>
 </html>
-
-
-
-
