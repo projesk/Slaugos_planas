@@ -290,8 +290,21 @@ const slaugosPlanas = {
     "AKS sekimas kas 4 val."
   ],
   "Sutrikusi mityba per burną": [
-    "PEG perrišimas (jei taikoma)",
-    "Pagalba maitinantis / konsistencijos pritaikymas"
+  "Stebėjimas dėl aspiracijos",
+  "Pagalba valgant",
+  "Reikalui esant maisto tirštinimas"
+],
+"Mityba per zondą (NG)": [
+  "Zondo padėties patikra pagal įstaigos protokolą",
+  "Galvūgalis ≥30–45° maitinimo metu ir 30–60 min po",
+  "Zondo praplovimas prieš ir po maitinimo bei vaistų",
+  "Nosies ir odos prie zondo priežiūra, fiksacijos patikra",
+  "Stebėti dėl aspiracijos, pykinimo, pilvo pūtimo"
+],
+"Mityba per PEG": [
+  "PEG vietos apžiūra ir tvarsčio keitimas",
+  "Praplovimas prieš ir po maitinimo bei vaistų",
+  "Galvūgalis ≥30–45° maitinimo metu ir 30–60 min po"
   ],
   "Rizika griuvimui dėl pagalbos poreikio": [
     "Stebėti dėl griuvimų rizikos, kviesti pagalbą judant"
@@ -421,7 +434,17 @@ function generateResults(){
     else pills.push(classifyPill(`Pulsas ${hr}/min`, "ok"));
   }
   // Mityba / judėjimas / oda
-  if(f["mityba"].value!=="burna") esamos.push("Sutrikusi mityba per burną");
+const m = f["mityba"].value;
+if (m === "peg") {
+  esamos.push("Mityba per PEG");
+} else if (m === "zondas") {
+  esamos.push("Mityba per zondą (NG)");
+} else if (m === "burna") {
+  // problemą keliame tik jei yra rijimo sutrikimas ARBA nesuvalgo visko
+  if (f["rijimas"].value === "taip" || f["suvalgo"].value !== "taip") {
+    esamos.push("Sutrikusi mityba per burną");
+  }
+
   if(f["mobilumas"].value==="lova") galimos.push("Rizika praguloms dėl lovos režimo");
   if(f["mobilumas"].value==="pagalba") galimos.push("Rizika griuvimui dėl pagalbos poreikio");
   if(f["pragulos"].value==="yra") esamos.push("Pragulos");
@@ -532,5 +555,6 @@ function resetForm(){
 </script>
 </body>
 </html>
+
 
 
