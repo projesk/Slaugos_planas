@@ -513,7 +513,7 @@ function generateResults(){
   <strong>AKS:</strong> ${aksStr}<br>
   <strong>ŠSD:</strong> ${valOrDash(hr)} / min<br>
   <strong>Temperatūra:</strong> ${temp!=null?temp.toFixed(1):"-"} °C</p>
-  <p><strong>Paciento psichologinė būklė:</strong> ${escapeHtml(psichoTekstas)}</p>`;
+  <p><strong>Pacientas:</strong> ${escapeHtml(psichoTekstas)}</p>`;
 
   $('results').innerHTML = html;
 
@@ -525,7 +525,7 @@ function generateResults(){
 
   const irasas =
     `Gyvybiniai rodikliai:\n${gyvybiniai}\n\n` +
-    `Paciento psichologinė būklė:\n${psichoTekstas}\n\n` +
+    `Pacientas: ${psichoTekstas}\n\n` +
     `Slaugos problemos:\n${slaugosProb}\n\n` +
     `Galimos problemos:\n${galimosProb}\n\n` +
     `Slaugos planas:\n${planasText}`;
@@ -567,4 +567,5 @@ function resetForm(){
 </script>
 </body>
 </html>
+
 
