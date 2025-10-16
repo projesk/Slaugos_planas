@@ -175,6 +175,34 @@
       </label>
     </div>
 
+    <!-- DIETA (pasirinkimas + „Kita“) -->
+    <div class="section">
+      <h2>Dieta</h2>
+      <label for="dieta_kodas">Pasirinkite dietą</label>
+      <select id="dieta_kodas" name="dieta_kodas">
+        <option value="P1">P1 (Įprasta)</option>
+        <option value="PTM">PTM (Minkštinta)</option>
+        <option value="TM">TM (Tarkuota/trinta)</option>
+        <option value="SM">SM (Skysto/enterinis)</option>
+        <option value="CD">CD (Diabeto)</option>
+        <option value="PTM-CD">PTM - CD (Minkštinta + CD)</option>
+        <option value="NPB">NPB (Nieko per burną)</option>
+        <option value="P4">P4 (Vegetarinė)</option>
+        <option value="Na">Na (Mažiau natrio)</option>
+        <option value="B">B (Baltyminė)</option>
+        <option value="Lac">Lac (Be laktozės)</option>
+        <option value="Sk(padid.)">Sk(padid.) (Daugiau skaidulų)</option>
+        <option value="Sk(maž.)">Sk(maž.) (Mažiau skaidulų)</option>
+        <option value="KITA">Kita…</option>
+      </select>
+
+      <div id="dieta_kita_wrap" style="display:none; margin-top:10px">
+        <label for="dieta_kita">Įrašykite dietą ranka</label>
+        <input id="dieta_kita" placeholder="pvz., be glitimo, be kiaušinių..." />
+        <div class="hint">„Kita“ atveju slaugos plano papildomų eilučių nepridedame – tik konstatuojame dietą įraše.</div>
+      </div>
+    </div>
+
     <!-- ŠALINIMAS -->
     <div class="section">
       <h2>Šalinimas</h2>
@@ -318,10 +346,12 @@ onReady(() => {
   $('zaizdos')?.addEventListener('change', e => { $('zaizdos_aprasymas').style.display = e.target.value === 'yra' ? 'block' : 'none'; });
   $('skausmas')?.addEventListener('change', e => { $('skausmoLygis')?.toggleAttribute('required', e.target.value === 'taip'); });
   $('resetBtn')?.addEventListener('click', resetForm);
+  const dietaSel = $('dieta_kodas');
+  if (dietaSel) dietaSel.addEventListener('change', ()=> { $('dieta_kita_wrap').style.display = (dietaSel.value==='KITA')?'block':'none'; });
 });
 
 /* ——— KONFIGŪRA: ĮKLIJUOK SAVO /exec URL ——— */
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxODAbmdrmccCYCUkswsFgnz-nrC8clEQQf-5kId3y-3TCqUwsU4pyCze2Jojv43VV_1A/exec";
+const GOOGLE_SCRIPT_URL = "PASTE_YOUR_WEBAPP_EXEC_URL_HERE";
 
 /* ——— SLAUGOS PLANŲ ŽEMĖLAPIS ——— */
 const slaugosPlanas = {
@@ -400,6 +430,23 @@ const slaugosPlanas = {
   ]
 };
 
+/* ——— DIETOS → VIENOS EILUTĖS SAKINIAI (į planą) ——— */
+const dietPlan = {
+  "P1": [],          // nerašom plano
+  "P4": [],          // nerašom plano
+  "PTM":   ["Stebima, kaip pacientui pavyksta nuryti maistą; stebime dėl aspiracijos rizikos."],
+  "TM":    ["Stebima, kaip pacientui pavyksta nuryti maistą; stebime dėl aspiracijos rizikos."],
+  "SM":    ["Pacientas maitinamas mažais boliusais, lėtai; stebima dėl aspiracijos rizikos."],
+  "CD":    ["Glikemijos sekimas."],
+  "PTM-CD":["Stebima, kaip pavyksta nuryti; stebime dėl aspiracijos rizikos; glikemijos sekimas."],
+  "Na":    ["Stebima dėl edemų; AKS ir skysčių balanso sekimas, pastebėjus edemas."],
+  "Sk(padid.)": ["Stebima dėl pilvo pūtimo ir tuštinimosi."],
+  "Sk(maž.)":   ["Stebima dėl pilvo pūtimo ir tuštinimosi."],
+  "B": [],           // tik konstatuojam dietą
+  "Lac": [],         // tik konstatuojam dietą
+  "NPB":   ["Pacientas nieko nevalgo ir negeria, kol kitaip nenurodė gydytojas."]
+};
+
 /* ——— PAGALBINĖS ——— */
 let lastPayload = null;
 function toNum(v){ const n = parseFloat(v); return isFinite(n) ? n : null; }
@@ -415,7 +462,6 @@ function vitalsText(spo2, sys, dia, map, hr, temp){
 
 /* ——— PAGRINDINĖ LOGIKA ——— */
 function generateResults(){
-  // status off
   $('statusOk').style.display='none'; $('statusErr').style.display='none';
 
   const f = document.forms['nursingForm'];
@@ -443,7 +489,7 @@ function generateResults(){
     else if(temp < 36.0){ esamos.push("Hipotermija"); pills.push(classifyPill(`T ${temp.toFixed(1)}°C (žema)`,"warn")); }
     else pills.push(classifyPill(`T ${temp.toFixed(1)}°C`,"ok"));
   }
-  // Kvėpavimas / nosis / dusulys
+  // Kvėp./nosis/dusulys
   if(f['trach'].value==='taip') esamos.push("Kvėpavimo takai su tracheostominiu vamzdžiu");
   if(f['nosis'].value==='istraukti') esamos.push("Nedidelis kraujavimas iš nosies");
   if(f['dusulys'].value==='taip') esamos.push("Sutrikusi kvėpavimo funkcija (dusulys)");
@@ -459,6 +505,7 @@ function generateResults(){
     else if(hr<50) pills.push(classifyPill(`Pulsas ${hr}/min (bradikardija)`,"warn"));
     else pills.push(classifyPill(`Pulsas ${hr}/min`,"ok"));
   }
+
   // Mityba (atskyrimas)
   const m = f['mityba'].value;
   if (m === 'peg') { esamos.push("Mityba per PEG");
@@ -468,6 +515,7 @@ function generateResults(){
       esamos.push("Sutrikusi mityba per burną");
     }
   }
+
   // Judėjimas / oda
   if(f['mobilumas'].value==='lova') galimos.push("Rizika praguloms dėl lovos režimo");
   if(f['mobilumas'].value==='pagalba') galimos.push("Rizika griuvimui dėl pagalbos poreikio");
@@ -476,6 +524,7 @@ function generateResults(){
     const apr = (f['zaizdos_text'].value||'').trim();
     esamos.push("Odos vientisumo pažeidimas (žaizda)"+(apr?(" – "+apr):""));
   }
+
   // Skausmas
   if(f['skausmas'].value==='taip'){
     const val = toNum(f['skausmoLygis'].value);
@@ -484,6 +533,7 @@ function generateResults(){
     const sev = val>=7 ? "bad" : val>=4 ? "warn" : "ok";
     pills.push(classifyPill(`Skausmas ${val}/10`, sev));
   }
+
   // Kraujavimo rizika
   if(f['kraujavimo_rizika'].value==='yra'){ galimos.push("Kraujavimo rizika"); }
 
@@ -518,6 +568,12 @@ function generateResults(){
   if (pvAllergy)         pvSummaryParts.push("Alergijos: " + pvAllergy);
   const pvSummaryText = pvSummaryParts.join(" | ");
 
+  // ——— DIETA
+  const dietCode = ($('dieta_kodas')?.value || '').trim();
+  const dietCustom = (dietCode === 'KITA') ? (($('dieta_kita')?.value || '').trim()) : '';
+  const dietaTextForUi = (dietCode === 'KITA') ? (dietCustom || '—') : (dietCode || '—');
+  const dietaTextForNote = dietaTextForUi; // tą patį rašom į įrašą
+
   // UI renderis
   let html = "";
   if(pills.length) html += `<div class="hint"><strong>Greita santrauka:</strong> ${pills.join(" ")}</div>`;
@@ -541,11 +597,12 @@ function generateResults(){
   <strong>ŠSD:</strong> ${valOrDash(hr)} / min<br>
   <strong>Temperatūra:</strong> ${temp!=null?temp.toFixed(1):"-"} °C</p>
   <p><strong>pacientas:</strong> ${escapeHtml(psichoTekstas)}</p>
+  <p><strong>pacientui skirta:</strong> ${escapeHtml(dietaTextForUi)} dieta</p>
   <p><strong>Pirminis vertinimas:</strong> ${escapeHtml(pvSummaryText || "—")}</p>`;
 
   $('results').innerHTML = html;
 
-  // ——— GALUTINIS PLANAS į įrašą (be pasikartojimų)
+  // ——— GALUTINIS PLANAS į įrašą (be pasikartojimų) + DIETA sakinys
   const seenPlan = new Set();
   const planItems = [];
   [...esamosU, ...galimosU].forEach(p => {
@@ -553,7 +610,12 @@ function generateResults(){
     if (!key) return;
     slaugosPlanas[key].forEach(it => { if(!seenPlan.has(it)){ seenPlan.add(it); planItems.push(it); } });
   });
-  pvExtraItems.forEach(it => { if(!seenPlan.has(it)){ seenPlan.add(it); planItems.push(it); } });
+  // Dieta: pridedame sakinį, jei yra apibrėžtas ir tai ne „Kita“
+  if (dietCode && dietCode !== 'KITA') {
+    (dietPlan[dietCode] || []).forEach(it => {
+      if(!seenPlan.has(it)){ seenPlan.add(it); planItems.push(it); }
+    });
+  }
   const planasText = planItems.length ? planItems.map(i => "• " + i).join("\n") : "-";
 
   // ——— Vienos ląstelės „įrašas“ Google Sheets
@@ -564,6 +626,7 @@ function generateResults(){
   const irasas =
     `Gyvybiniai rodikliai:\n${gyvybiniai}\n\n` +
     `pacientas: ${psichoTekstas}\n\n` +
+    `pacientui skirta: ${dietaTextForNote} dieta\n\n` +
     `Pirminis vertinimas:\n${pvSummaryText || "—"}\n\n` +
     `Slaugos problemos:\n${slaugosProb}\n\n` +
     `Galimos problemos:\n${galimosProb}\n\n` +
@@ -576,7 +639,7 @@ function generateResults(){
     "įrašas": irasas
   };
 
-  // Debug dėžutė (pašalinti jei nereikia)
+  // Debug dėžutė (pašalink jei nereikia)
   $('results').insertAdjacentHTML('beforeend', `<div class="mono">${escapeHtml(JSON.stringify(lastPayload,null,2))}</div>`);
 }
 
@@ -601,13 +664,9 @@ function resetForm(){
   $('statusOk').style.display='none';
   $('statusErr').style.display='none';
   $('zaizdos_aprasymas').style.display='none';
+  $('dieta_kita_wrap').style.display='none';
   lastPayload = null;
 }
 </script>
 </body>
 </html>
-
-
-
-
-
