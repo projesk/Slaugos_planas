@@ -351,7 +351,11 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxODAbmdrmccC
 const slaugosPlanas = {
   "Kvėpavimo takai su tracheostominiu vamzdžiu": [
     "Savalaikis atsiurbimas iš tracheostominio vamzdelio",
-    "Vamzdelio drėkinimas"
+    "Vamzdelio drėkinimas",
+    "Palatos oro drėkinimas",
+    "Sekreto (kiekio/spalvos/klampumo) vertinimas ir fiksavimas",
+    "Stomos priežiūra – tvarsčio keitimas bent 2 kartus per parą",
+    "Fiksacijos patikra"
   ],
   "Nedidelis kraujavimas iš nosies": [
     "AKS stebėjimas kraujavimui nestojant",
@@ -367,11 +371,13 @@ const slaugosPlanas = {
   ],
   "Pažemėjęs kraujo spaudimas": [
     "Patarta neskubėti keltis, pasėdėti nuleidus kojas prieš einant",
-    "Stebėjimas dėl galimų griuvimų"
+    "Stebėjimas dėl galimų griuvimų",
+    "AKS matavimas po 1 val."
   ],
   "Padidėjęs kraujo spaudimas": [
     "AKS sekimas kas 4 val."
   ],
+
   "Sutrikusi mityba per burną": [
     "Stebėjimas dėl aspiracijos",
     "Pagalba valgant",
@@ -389,6 +395,7 @@ const slaugosPlanas = {
     "Praplovimas prieš ir po maitinimo bei vaistų",
     "Galvūgalis ≥30–45° maitinimo metu ir 30–60 min po"
   ],
+
   "Rizika griuvimui dėl pagalbos poreikio": [
     "Stebėti dėl griuvimų rizikos, kviesti pagalbą judant"
   ],
@@ -407,9 +414,38 @@ const slaugosPlanas = {
     "Žaizdos perrišimas",
     "Stebėti infekcijos požymius"
   ],
-  "Ūmus/chroniškas skausmas": [
-    "Savalaikis nuskausminimas pagal gydytojo paskyrimą"
+
+  /* ——— SKAUSMAS (išskirstyta) ——— */
+  "Nedidelis skausmas (1–3/10)": [
+    "Nefarmakologinis skausmo malšinimas",
+    "Pacientui norint – farmakologinis nuskausminimas"
   ],
+  "Vidutinis skausmas (4–6/10)": [
+    "Savalaikis nuskausminimas pagal gydytojo paskyrimą",
+    "Pakartotinis skausmo matavimas po 30 min. po vaistų suleidimo/sudavimo"
+  ],
+  "Didelis skausmas (7–10/10)": [
+    "Skubus nuskausminimas pagal gydytojo paskyrimą",
+    "Pakartotinis skausmo matavimas po 15 min."
+  ],
+
+  /* ——— ŠALINIMAS (kad kristų į problemas/planą) ——— */
+  "Šlapimo kateteris": [
+    "Kateterio priežiūra pagal įstaigos protokolą",
+    "Stebėti diurezę ir šlapimo pobūdį",
+    "Stebėti infekcijos požymius"
+  ],
+  "Vidurių užkietėjimas": [
+    "Stebėti tuštinimąsi",
+    "Skysčių/aktyvumo skatinimas pagal būklę",
+    "Priemonių taikymas pagal paskyrimą"
+  ],
+  "Viduriavimas": [
+    "Stebėti tuštinimąsi",
+    "Odos priežiūra tarpvietėje",
+    "Skysčių balanso stebėjimas"
+  ],
+
   "Padidėjusi temperatūra": [
     "Temperatūros stebėjimas"
   ],
@@ -475,18 +511,28 @@ function generateResults(){
   const hr=toNum(f['pulsas'].value);
   const map=calcMAP(sys,dia);
 
+  const highSys30 = (sys!=null && sys>165); // papildomas plano punktas
+
+  // SpO2: žemiau 95 jau meta "Neefektyvi dujų apykaita"
   if(spo2!=null){
     if(spo2<90){ esamos.push("Neefektyvi dujų apykaita"); pills.push(classifyPill(`SpO₂ ${spo2}% (kritiškai žema)`,"bad")); }
-    else if(spo2<94){ esamos.push("Neefektyvi dujų apykaita"); pills.push(classifyPill(`SpO₂ ${spo2}% (žema)`,"warn")); }
+    else if(spo2<95){ esamos.push("Neefektyvi dujų apykaita"); pills.push(classifyPill(`SpO₂ ${spo2}% (žema)`,"warn")); }
     else pills.push(classifyPill(`SpO₂ ${spo2}%`,"ok"));
   }
+
+  // Temperatūra: hipotermija žemiau 35,6
   if(temp!=null){
     if(temp>=38.0){ esamos.push("Padidėjusi temperatūra"); pills.push(classifyPill(`T ${temp.toFixed(1)}°C (karščiavimas)`,"warn")); }
     else if(temp>=37.1){ esamos.push("Padidėjusi temperatūra"); pills.push(classifyPill(`T ${temp.toFixed(1)}°C (subfebrilus)`,"warn")); }
-    else if(temp<36.0){ esamos.push("Hipotermija"); pills.push(classifyPill(`T ${temp.toFixed(1)}°C (žema)`,"warn")); }
+    else if(temp<35.6){ esamos.push("Hipotermija"); pills.push(classifyPill(`T ${temp.toFixed(1)}°C (žema)`,"warn")); }
     else pills.push(classifyPill(`T ${temp.toFixed(1)}°C`,"ok"));
   }
-  if(f['trach'].value==='taip') esamos.push("Kvėpavimo takai su tracheostominiu vamzdžiu");
+
+  // Trach: problema turi kristi ir jei sekretas/siurbimas pasirinkta
+  if(f['trach'].value==='taip' || f['sekretas_trach'].value==='taip' || f['siurbimas'].value==='taip'){
+    esamos.push("Kvėpavimo takai su tracheostominiu vamzdžiu");
+  }
+
   if(f['nosis'].value==='istraukti') esamos.push("Nedidelis kraujavimas iš nosies");
   if(f['dusulys'].value==='taip') esamos.push("Sutrikusi kvėpavimo funkcija (dusulys)");
 
@@ -494,14 +540,18 @@ function generateResults(){
     if(sys<100 || (map!=null && map<65)) esamos.push("Pažemėjęs kraujo spaudimas");
     if(sys>=140 || dia>=90) esamos.push("Padidėjęs kraujo spaudimas");
   }
+
   if(map!=null) pills.push(classifyPill(`MAP ${map} mmHg`,(map<65)?"bad":(map<75)?"warn":"ok"));
   if(sys!=null&&dia!=null) pills.push(classifyPill(`AKS ${sys}/${dia} mmHg`,(sys>=140||dia>=90)?"warn":(sys<100)?"warn":"ok"));
+  if(highSys30) pills.push(classifyPill(`SYS ${sys} mmHg (>\u00a0165) – kas 30 min.`,"warn"));
+
   if(hr!=null){
     if(hr>100) pills.push(classifyPill(`Pulsas ${hr}/min (tachikardija)`,"warn"));
     else if(hr<50) pills.push(classifyPill(`Pulsas ${hr}/min (bradikardija)`,"warn"));
     else pills.push(classifyPill(`Pulsas ${hr}/min`,"ok"));
   }
 
+  // Mityba
   const m=f['mityba'].value;
   if(m==='peg') esamos.push("Mityba per PEG");
   else if(m==='zondas') esamos.push("Mityba per zondą (NG)");
@@ -509,6 +559,12 @@ function generateResults(){
     if(f['rijimas'].value==='taip' || f['suvalgo'].value!=='taip') esamos.push("Sutrikusi mityba per burną");
   }
 
+  // Šalinimas: dabar krenta į problemas
+  if(f['kateteris'].value==='yra') esamos.push("Šlapimo kateteris");
+  if(f['viduriai'].value==='taip') esamos.push("Vidurių užkietėjimas");
+  if(f['viduriavimas'].value==='taip') esamos.push("Viduriavimas");
+
+  // Judėjimas / oda
   if(f['mobilumas'].value==='lova') galimos.push("Rizika praguloms dėl lovos režimo");
   if(f['mobilumas'].value==='pagalba') galimos.push("Rizika griuvimui dėl pagalbos poreikio");
   if(f['pragulos'].value==='yra') esamos.push("Pragulos");
@@ -517,10 +573,19 @@ function generateResults(){
     esamos.push("Odos vientisumo pažeidimas (žaizda)"+(apr?(" – "+apr):""));
   }
 
+  // Skausmas: 1–3 / 4–6 / 7–10
   if(f['skausmas'].value==='taip'){
     const val=toNum(f['skausmoLygis'].value);
     if(val==null || val<0 || val>10){ alert("Įveskite skausmo intensyvumą (0–10)."); $('skausmoLygis').focus(); return; }
-    esamos.push(`Ūmus/chroniškas skausmas (${val}/10)`);
+
+    let painLabel="";
+    if(val>=1 && val<=3) painLabel="Nedidelis skausmas (1–3/10)";
+    else if(val>=4 && val<=6) painLabel="Vidutinis skausmas (4–6/10)";
+    else if(val>=7 && val<=10) painLabel="Didelis skausmas (7–10/10)";
+    else painLabel="Skausmas (0/10)";
+
+    if(val>0) esamos.push(painLabel);
+
     const sev=val>=7 ? "bad" : val>=4 ? "warn" : "ok";
     pills.push(classifyPill(`Skausmas ${val}/10`,sev));
   }
@@ -577,8 +642,15 @@ function generateResults(){
   [...esamosU,...galimosU].forEach(p=>{
     const key=Object.keys(slaugosPlanas).find(k=>p.startsWith(k));
     if(key){
+      const items=[...slaugosPlanas[key]];
+
+      // Papildomas punktas prie padidėjusio AKS, jei SYS > 165
+      if(p.startsWith("Padidėjęs kraujo spaudimas") && highSys30){
+        items.push("AKS sekimas kas 30 min.");
+      }
+
       html+=`<div class="planas"><h4>${escapeHtml(p)}</h4><ul>${
-        slaugosPlanas[key].map(i=>`<li>${escapeHtml(i)}</li>`).join("")
+        items.map(i=>`<li>${escapeHtml(i)}</li>`).join("")
       }</ul></div>`;
     }
   });
@@ -618,13 +690,26 @@ function generateResults(){
     const key=Object.keys(slaugosPlanas).find(k=>p.startsWith(k));
     if(!key) return;
     slaugosPlanas[key].forEach(it=>{ if(!seenPlan.has(it)){ seenPlan.add(it); planItems.push(it); } });
+
+    // Papildomas punktas prie padidėjusio AKS, jei SYS > 165
+    if(p.startsWith("Padidėjęs kraujo spaudimas") && highSys30){
+      const it="AKS sekimas kas 30 min.";
+      if(!seenPlan.has(it)){ seenPlan.add(it); planItems.push(it); }
+    }
   });
+
   if(dietCode && dietCode!=='KITA'){
     (dietPlan[dietCode]||[]).forEach(it=>{ if(!seenPlan.has(it)){ seenPlan.add(it); planItems.push(it); } });
   }
   if(isRestrained){
     restraintPlan.forEach(it=>{ if(!seenPlan.has(it)){ seenPlan.add(it); planItems.push(it); } });
   }
+
+  // Pirminio vertinimo papildomi (jei nori – įtraukiam į planą)
+  if(pvExtraItems.length){
+    pvExtraItems.forEach(it=>{ if(!seenPlan.has(it)){ seenPlan.add(it); planItems.push(it); } });
+  }
+
   const planasText=planItems.length?planItems.map(i=>"• "+i).join("\n"):"-";
 
   const gyvybiniai=vitalsText(spo2,sys,dia,map,hr,temp);
@@ -680,4 +765,3 @@ function resetForm(){
 </script>
 </body>
 </html>
-
