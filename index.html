@@ -648,6 +648,12 @@ const slaugosPlanas = {
     "Odos priežiūra tarpvietėje",
     "Skysčių balanso stebėjimas"
   ],
+ "Sutrikęs miegas": [
+  "Aplinkos veiksnių korekcija (triukšmas, šviesa, temperatūra)",
+  "Skausmo vertinimas prieš miegą",
+  "Nefarmakologinių miego gerinimo priemonių taikymas",
+],
+
   "Padidėjusi temperatūra": ["Temperatūros stebėjimas"],
   "Hipotermija": ["Šilumos palaikymas","Temperatūros stebėjimas"],
   "Kraujavimo rizika": ["Stebėjimas dėl galimo kraujavimo","AKS sekimas"]
@@ -816,6 +822,11 @@ function generateResults(){
   if(f['kateteris'].value==='yra') esamos.push("Šlapimo kateteris");
   if(f['viduriai'].value==='taip') esamos.push("Vidurių užkietėjimas");
   if(f['viduriavimas'].value==='taip') esamos.push("Viduriavimas");
+ 
+/* ===== MIEGAS ===== */
+if (f['miegas'] && f['miegas'].value === 'sutrikusi') {
+  esamos.push("Sutrikęs miegas");
+}
 
   if(f['mobilumas'].value==='lova') galimos.push("Rizika praguloms dėl lovos režimo");
   if(f['mobilumas'].value==='pagalba') galimos.push("Rizika griuvimui dėl pagalbos poreikio");
@@ -999,3 +1010,4 @@ function resetForm(){
 </script>
 </body>
 </html>
+
