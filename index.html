@@ -14,13 +14,62 @@
   .section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
   .section h2{font-size:18px;margin:0 0 10px;padding-bottom:8px;border-bottom:1px dashed var(--line)}
   label{display:block;margin-top:8px;font-weight:600}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .hint{font-weight:400;color:var(--muted);font-size:12px}
-  select,input,textarea{padding:10px;border:1px solid var(--line);border-radius:8px;width:100%;margin-top:6px;background:#fff}
-  textarea{min-height:84px;resize:vertical}
+
+  /* ====== LYGIAVIMO PATAISYMAI (kad laukai "neprasilenktų") ====== */
+  .row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    align-items:end; /* svarbiausia: sulygina input/select apačias */
+  }
+  .row > label{
+    display:flex;              /* tekstas viršuj, laukas apačioj */
+    flex-direction:column;
+    justify-content:flex-end;
+  }
+
+  .hint{font-weight:400;color:var(--muted);font-size:12px;line-height:1.25}
+
+  /* suvienodinam kontrolės aukštį */
+  select,input{
+    padding:10px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    width:100%;
+    margin-top:6px;
+    background:#fff;
+    height:44px;
+  }
+  textarea{
+    padding:10px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    width:100%;
+    margin-top:6px;
+    background:#fff;
+    min-height:84px;
+    resize:vertical;
+    height:auto;
+  }
+
+  /* ====== iOS/Android SELECT suvienodinimas ====== */
+  select{
+    -webkit-appearance:none;
+    appearance:none;
+
+    padding-right:42px; /* vieta rodyklei */
+    background-repeat:no-repeat;
+    background-position:right 14px center;
+    background-size:12px 12px;
+
+    /* vienoda rodyklė visoms sistemoms */
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%236b7280' d='M7 10l5 5l5-5z'/%3E%3C/svg%3E");
+  }
+  select::-ms-expand{display:none;} /* senesniems MS */
+
   .checks{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px}
   .checks label{display:flex;align-items:center;font-weight:500;margin:0}
-  .checks input{margin-right:8px;width:auto}
+  .checks input{margin-right:8px;width:auto;height:auto}
   .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
   button{padding:10px 14px;border:none;border-radius:10px;background:var(--accent);color:#fff;cursor:pointer;font-weight:600}
   button.secondary{background:#fff;color:#111;border:1px solid var(--line)}
@@ -765,4 +814,3 @@ function resetForm(){
 </script>
 </body>
 </html>
-
