@@ -907,16 +907,20 @@ if (f['dusulys'].value === 'taip') {
     esamos.push("Sutrikęs miegas");
   }
 
-// --- Judėjimas / pragulos (sujungta logika)
-if(f['mobilumas'].value === 'lova' && f['pragulos'].value === 'yra'){
-  esamos.push("Gulimas režimas ir pragulos");
-}
-else{
-  if(f['mobilumas'].value === 'lova')
-    galimos.push("Rizika praguloms dėl lovos režimo");
+// --- Judėjimas / pragulos (NORIMA: esamos = "Gulimas režimas" + "Pragulos")
+const bedRest = (f['mobilumas'].value === 'lova');
+const hasPressureUlcer = (f['pragulos'].value === 'yra');
 
-  if(f['pragulos'].value === 'yra')
-    esamos.push("Pragulos");
+if (bedRest) {
+  esamos.push("Gulimas režimas");
+  // jei nori, kad kai lova ir pragulų nėra, liktų profilaktika:
+  if (!hasPressureUlcer) {
+    galimos.push("Rizika praguloms dėl lovos režimo");
+  }
+}
+
+if (hasPressureUlcer) {
+  esamos.push("Pragulos");
 }
 
   // --- Oda
@@ -984,6 +988,9 @@ if(f['skausmas'].value === 'taip'){
 
 /* =========================================================
    6) OUTPUT / ĮRAŠAS / HTML  (EDIT HERE #4)
+   - pakeista: kai yra lovos režimas + pragulos,
+     plane rodomas tik "Gulimas režimas ir pragulos"
+     (be atskiro "Pragulos" plano dubliavimo)
 ========================================================= */
 let lastPayload = null;
 
@@ -994,8 +1001,12 @@ function renderOutput(f, ctx){
   const esamosU = uniq(esamos).sort();
   const galimosU = uniq(galimos).sort();
 
-  const pb_ramus  = $('ramus').checked;
-  const pb_orient = $('orientuotas').checked;
+  // ✅ Flag: kai lovos režimas + pragulos → vienas kombinuotas planas
+  const combineBedRestAndUlcers =
+    (f['mobilumas']?.value === 'lova' && f['pragulos']?.value === 'yra');
+
+  const pb_ramus  = $('ramus')?.checked;
+  const pb_orient = $('orientuotas')?.checked;
   const psichoTekstas = `${pb_ramus ? 'ramus' : 'neramus'}, ${pb_orient ? 'orientuotas' : 'neorientuotas'}`;
 
   const isRestrained = $('suvarzymas')?.checked === true;
@@ -1037,7 +1048,26 @@ function renderOutput(f, ctx){
   html+=`<h3>Galimos problemos</h3><ul>${galimosU.length ? galimosU.map(p=>`<li>${escapeHtml(p)}</li>`).join("") : "<li>Nepastebėta</li>"}</ul>`;
 
   html+=`<h3>Slaugos planas</h3>`;
+
+  // ✅ 1) Pirmiausia (jei reikia) – kombinuotas planas
+  if (combineBedRestAndUlcers) {
+    const key = "Gulimas režimas ir pragulos";
+    const items = slaugosPlanas[key] || [];
+    if(items.length){
+      html += `<div class="planas"><h4>${escapeHtml(key)}</h4><ul>${
+        items.map(i=>`<li>${escapeHtml(i)}</li>`).join("")
+      }</ul></div>`;
+    }
+  }
+
+  // ✅ 2) Toliau – kiti planai, bet praleidžiam dubliuojančius
   [...esamosU, ...galimosU].forEach(p => {
+    if (combineBedRestAndUlcers) {
+      if (p === "Pragulos") return;
+      if (p === "Rizika praguloms dėl lovos režimo") return;
+      // "Gulimas režimas" neturi atskiro plano (nebent vėliau pridėsi) – paliekam ramybėj
+    }
+
     const key = Object.keys(slaugosPlanas).find(k => p.startsWith(k));
     if(!key) return;
 
@@ -1050,15 +1080,18 @@ function renderOutput(f, ctx){
     html += `<div class="planas"><h4>${escapeHtml(p)}</h4><ul>${items.map(i=>`<li>${escapeHtml(i)}</li>`).join("")}</ul></div>`;
   });
 
+  // Dietos planas
   const dietItems = (dietCode && dietCode!=='KITA') ? (dietPlan[dietCode]||[]) : [];
   if(dietItems.length){
     html+=`<div class="planas"><h4>Dieta: ${escapeHtml(dietCode)}</h4><ul>${dietItems.map(i=>`<li>${escapeHtml(i)}</li>`).join("")}</ul></div>`;
   }
 
+  // Suvaržymas
   if(isRestrained){
     html+=`<div class="planas"><h4>Fizinis suvaržymas</h4><ul>${restraintPlan.map(i=>`<li>${escapeHtml(i)}</li>`).join("")}</ul></div>`;
   }
 
+  // Pirminio vertinimo papildomos intervencijos
   if(pvExtraItems.length){
     const extra = uniq(pvExtraItems);
     html+=`<div class="planas"><h4>Pirminis vertinimas: papildomos intervencijos</h4><ul>${extra.map(i=>`<li>${escapeHtml(i)}</li>`).join("")}</ul></div>`;
@@ -1081,11 +1114,26 @@ function renderOutput(f, ctx){
 
   $('results').innerHTML = html;
 
-  // Bendras planas + įrašas
+  // =========================
+  // Bendras planas + įrašas (LIS) — be dubliavimo
+  // =========================
   const seenPlan=new Set();
   const planItems=[];
 
+  // ✅ jei kombinuotas scenarijus – įdedam tik kombinuotą planą į planItems
+  if (combineBedRestAndUlcers) {
+    const key = "Gulimas režimas ir pragulos";
+    (slaugosPlanas[key] || []).forEach(it => {
+      if(!seenPlan.has(it)){ seenPlan.add(it); planItems.push(it); }
+    });
+  }
+
   [...esamosU, ...galimosU].forEach(p => {
+    if (combineBedRestAndUlcers) {
+      if (p === "Pragulos") return;
+      if (p === "Rizika praguloms dėl lovos režimo") return;
+    }
+
     const key = Object.keys(slaugosPlanas).find(k => p.startsWith(k));
     if(!key) return;
 
@@ -1138,6 +1186,7 @@ function renderOutput(f, ctx){
 
   $('results').insertAdjacentHTML('beforeend', `<div class="mono">${escapeHtml(JSON.stringify(lastPayload,null,2))}</div>`);
 }
+
 
 /* =========================================================
    7) MAIN: GENERUOTI
@@ -1192,6 +1241,7 @@ function resetForm(){
 
 </body>
 </html>
+
 
 
 
