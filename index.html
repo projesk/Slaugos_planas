@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="lt">
 <head>
 <meta charset="UTF-8" />
@@ -12,19 +12,24 @@
   *{box-sizing:border-box}
   body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
   h1{margin:18px auto 0;max-width:1100px;padding:0 16px;font-size:22px}
-  .grid{display:grid;gap:14px;grid-template-columns:repeat(3,minmax(0,1fr));max-width:1100px;margin:14px auto;padding:0 16px}
+
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(3,minmax(0,1fr));max-width:1100px;margin:14px auto;padding:0 16px;align-items:start}
   @media(max-width:980px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
   @media(max-width:680px){.grid{grid-template-columns:1fr}}
 
-  .section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 1px 0 rgba(0,0,0,.03)}
+  .section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 1px 0 rgba(0,0,0,.03);min-width:0}
   h2{font-size:14px;margin:0 0 10px 0;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
-  label{display:block;font-size:13px;color:var(--muted);margin:8px 0 0}
+  label{display:block;font-size:13px;color:var(--muted);margin:8px 0 0;min-width:0}
+
   input,select,textarea,button{
     width:100%;margin-top:6px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;
     font-size:14px;background:#fff;color:var(--text);outline:none;
   }
-  textarea{resize:vertical}
-  .row{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
+  input,select,button{height:44px}
+  textarea{min-height:84px;height:auto;resize:vertical}
+
+  .row{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+  .row > label{display:flex;flex-direction:column;min-width:0}
   @media(max-width:680px){.row{grid-template-columns:1fr}}
 
   /* iOS select vizualinis suvienodinimas */
@@ -47,576 +52,449 @@
   .checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:8px}
   .checks label{display:flex;align-items:center;gap:8px;margin:0;color:var(--text);font-size:14px}
   .checks input{width:auto;margin:0}
-  .hint{margin-top:8px;color:var(--muted);font-size:12px;line-height:1.35}
 
-  .actions{max-width:1100px;margin:0 auto;padding:0 16px 20px;display:flex;gap:10px;flex-wrap:wrap}
-  button{cursor:pointer;border:none}
-  #genBtn{background:var(--accent);color:#fff;font-weight:800}
-  button.secondary{background:#fff;border:1px solid var(--line);font-weight:700}
-  button.good{background:var(--ok);color:#fff;font-weight:800}
-
-  .results{max-width:1100px;margin:0 auto 24px;padding:0 16px}
-  .results .planas{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}
-  .results h3{margin:14px 0 8px}
-  .results h4{margin:0 0 8px;font-size:14px}
-  .results ul{margin:6px 0 0 18px;padding:0}
-  .pill{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;margin-right:6px;border:1px solid var(--line);background:#fff}
-  .pill.ok{border-color:rgba(22,163,74,.25)}
-  .pill.warn{border-color:rgba(245,158,11,.35)}
-  .pill.bad{border-color:rgba(220,38,38,.35)}
-  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px;white-space:pre-wrap;background:#111827;color:#f9fafb;padding:12px;border-radius:14px;margin-top:12px}
-
-  .status{max-width:1100px;margin:0 auto;padding:0 16px 10px;display:none}
-  .status.ok{color:var(--ok);font-weight:900}
-  .status.err{color:var(--bad);font-weight:900}
-
-  details.pv summary{cursor:pointer;font-weight:900;color:var(--text)}
-  .pv-content{margin-top:10px}
-  .pv-content input,.pv-content textarea{background:#fff}
-
-  /* MODAL */
-  .modal{position:fixed;inset:0;display:block}
-  .modal[aria-hidden="true"]{display:none}
-  .modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.45)}
-  .modal__sheet{
-    position:absolute;left:50%;top:50%;
-    transform:translate(-50%,-50%);
-    width:min(980px, calc(100% - 24px));
-    max-height:calc(100% - 24px);
-    overflow:auto;
-    background:#fff;border-radius:18px;border:1px solid var(--line);
-    box-shadow:0 10px 30px rgba(0,0,0,.25);
-  }
-  .modal__header{
-    display:flex;align-items:flex-start; justify-content:space-between;
-    gap:12px; padding:14px; border-bottom:1px solid var(--line);
-  }
-  .modal__title{ font-weight:900; font-size:18px; }
-  .modal__subtitle{ color:var(--muted); font-size:12px; margin-top:4px; line-height:1.3; }
-  .modal__close{
-    border:1px solid var(--line); background:#fff; border-radius:10px;
-    width:40px; height:40px; cursor:pointer; font-weight:800;
-  }
-  .modal__footer{
-    position:sticky; bottom:0; background:#fff;
-    padding:12px 14px; border-top:1px solid var(--line);
-    display:flex; justify-content:flex-end; gap:10px;
-  }
-
-  /* DVPRS grid - kaip lentelė (0-10) */
-  .dvprsGrid{
-    padding:14px;
-    display:grid;
-    grid-template-columns:repeat(2, minmax(0, 1fr));
-    gap:10px;
-  }
-  @media(min-width:720px){
-    .dvprsGrid{ grid-template-columns:repeat(3, minmax(0, 1fr)); }
-  }
-  @media(min-width:980px){
-    .dvprsGrid{ grid-template-columns:repeat(4, minmax(0, 1fr)); }
-  }
-
-  .dvprsCard{
+  /* didesni ir aiškesni checkbox'ai (matosi, kas pažymėta) */
+  .checks{gap:10px}
+  .checks label{
+    padding:10px 12px;
     border:1px solid var(--line);
-    border-radius:14px;
-    padding:12px;
+    border-radius:12px;
     background:#fff;
     cursor:pointer;
-    text-align:left;
-    overflow:hidden;
+    user-select:none;
   }
-  .dvprsCard:active{ transform:scale(0.99); }
-
-  .dvprsBar{
-    height:10px;
-    border-radius:999px;
-    margin-bottom:10px;
-    background:var(--dvprsColor, #e5e7eb);
+  .checks input[type="checkbox"]{
+    -webkit-appearance:none;
+    appearance:none;
+    width:18px;height:18px;
+    border:1px solid var(--line);
+    border-radius:5px;
+    display:inline-grid;
+    place-content:center;
+    background:#fff;
   }
-  .dvprsTop{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
+  .checks input[type="checkbox"]::before{
+    content:"";
+    width:10px;height:10px;
+    transform:scale(0);
+    transition:transform .12s ease-in-out;
+    background:var(--accent);
+    border-radius:3px;
   }
-  .dvprsLeft{
-    display:flex;
-    align-items:center;
-    gap:10px;
-  }
-  .dvprsEmoji{
-    font-size:26px;
-    line-height:1;
-  }
-  .dvprsNum{
-    font-size:24px;
-    font-weight:900;
-    line-height:1;
-  }
-  .dvprsTag{
-    font-size:12px;
-    color:var(--muted);
-    white-space:nowrap;
-  }
-  .dvprsText{
-    margin-top:10px;
-    font-size:13px;
-    line-height:1.25;
-    font-weight:700;
-    color:#111;
+  .checks input[type="checkbox"]:checked{border-color:var(--accent)}
+  .checks input[type="checkbox"]:checked::before{transform:scale(1)}
+  .checks label:has(input[type="checkbox"]:checked){
+    border-color:rgba(37,99,235,.5);
+    background:rgba(37,99,235,.06);
+    color:var(--text);
   }
 
-  .dvprsLegend{
-    padding:0 14px 14px;
-    color:var(--muted);
-    font-size:12px;
-    line-height:1.3;
-  }
-   @media(max-width:680px){.grid{grid-template-columns:1fr}}
+  .hint{margin-top:8px;color:var(--muted);font-size:12px;line-height:1.3}
 
-  /* =========================================================
-     GYVYBINIAI RODIKLIAI – VIENINGAS IŠDĖSTYMAS (NEWS)
-  ========================================================= */
-  .section {
-    background: #fff;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 16px;
-  }
+  .actions{display:flex;gap:10px;margin-top:10px}
+  .actions button{cursor:pointer}
+  button.primary{background:var(--accent);color:#fff;border-color:transparent}
+  button.secondary{background:#fff}
 
-  .section .row {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    margin-bottom: 12px;
-  }
+  #output{grid-column:1 / -1}
+  .pill{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;border:1px solid var(--line);margin-right:6px;margin-top:6px}
+  .pill.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}
+  .pill.warn{background:#fffbeb;border-color:#fde68a;color:#92400e}
+  .pill.bad{background:#fef2f2;border-color:#fecaca;color:#991b1b}
 
-  .section label {
-    display: flex;
-    flex-direction: column;
-    font-size: 0.9rem;
-    color: #333;
-  }
+  .planas{border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-top:10px;background:#fafafa}
+  .planas h4{margin:0 0 6px;font-size:13px;color:#111}
+  .planas ul{margin:0;padding-left:18px}
+  .planas li{margin:3px 0}
 
-  .section input,
-  .section select {
-    height: 44px;
-    padding: 8px 10px;
-    font-size: 1rem;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    background-color: #fff;
-    appearance: none;
-    -webkit-appearance: none;
-  }
+  /* Gyvybinių rodiklių lygiavimas: vienodas label aukštis, kad laukai "neplaukiotų" */
+  .vitals .row > label{min-height:86px}
+  .vitals .hint{margin-top:10px}
 
-  .section select {
-    padding-right: 32px;
-  }
+  /* DVPRS modal */
+  .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(17,24,39,.5);padding:16px;z-index:50}
+  .modal.open{display:flex}
+  .modal__card{width:min(760px,100%);background:#fff;border-radius:16px;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.18);overflow:hidden}
+  .modal__head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
+  .modal__title{font-weight:700}
+  .modal__body{padding:14px 16px}
+  .modal__footer{display:flex;gap:10px;justify-content:flex-end;padding:14px 16px;border-top:1px solid var(--line)}
+  .xbtn{width:auto;padding:8px 10px;border-radius:10px}
 
-  .section input:focus,
-  .section select:focus {
-    outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
-  }
-
-  .section .hint {
-    font-size: 0.85rem;
-    color: #555;
-    margin-top: 8px;
-  }
-
-  @media (max-width: 640px) {
-    .section .row {
-      grid-template-columns: 1fr;
-    }
-   /* ===== Gyvybiniai – sulygiuoti label aukštį, kad niekas "nenuslystų" ===== */
-.section .row{
-  align-items: start;           /* stabiliau nei center */
-}
-
-.section label{
-  min-height: 74px;             /* sulygina kortelių aukštį per eilutę */
-}
-
-.section label > input,
-.section label > select{
-  margin-top: 6px;              /* vienodas tarpas po tekstu */
-}
-  }
-/* ===== Checkbox'ai – kad aiškiai matytųsi pažymėjimas ===== */
-input[type="checkbox"]{
-  appearance: auto !important;
-  -webkit-appearance: auto !important;
-  width: 18px;
-  height: 18px;
-  accent-color: var(--accent);
-}
-
-</style>
-
+  .dvprsLegend{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 6px}
+  @media(max-width:680px){.dvprsLegend{grid-template-columns:1fr}}
+  .dvprsCard{border:1px solid var(--line);border-radius:14px;padding:10px}
+  .dvprsCard h5{margin:0 0 6px}
+  .dvprsGrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:10px}
+  @media(max-width:820px){.dvprsGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  @media(max-width:420px){.dvprsGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .dvprsBtn{cursor:pointer;border:1px solid var(--line);border-radius:14px;padding:10px;background:#fff;display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center}
+  .dvprsBtn .face{font-size:30px;line-height:1}
+  .dvprsBtn .num{font-weight:800}
+  .dvprsBtn .txt{font-size:12px;color:var(--muted);text-align:center}
+  .dvprsBtn:hover{border-color:rgba(37,99,235,.4);box-shadow:0 2px 0 rgba(0,0,0,.03)}
 </style>
 </head>
-
 <body>
+
 <h1>Paciento vertinimas ir slaugos planas</h1>
 
-<form id="nursingForm" novalidate>
-  <div class="grid">
+<div class="grid">
 
-    <!-- IDENTIFIKACIJA -->
-    <div class="section">
-      <h2>Identifikacija</h2>
-      <label for="palata">Palata
-        <input id="palata" name="palata" autocomplete="off" />
-      </label>
-      <label for="lova">Lova
-        <input id="lova" name="lova" autocomplete="off" />
-      </label>
+  <!-- IDENTIFIKACIJA -->
+  <div class="section">
+    <h2>Identifikacija</h2>
+    <label for="palata">Palata
+      <input id="palata" placeholder="pvz. 312" />
+    </label>
+    <label for="lova">Lova
+      <input id="lova" placeholder="pvz. 4" />
+    </label>
+  </div>
+
+  <!-- PACIENTO BŪKLĖ -->
+  <div class="section">
+    <h2>Paciento būklė</h2>
+    <div class="checks">
+      <label><input type="checkbox" id="ramus" /> Ramus</label>
+      <label><input type="checkbox" id="orientuotas" /> Orientuotas</label>
+      <label><input type="checkbox" id="suvarzymas" /> Suvaržymas</label>
     </div>
+    <div class="hint">Jei nepažymėta – įrašas bus: „Pacientas: neramus, neorientuotas“.</div>
+  </div>
 
-    <!-- PACIENTO BŪKLĖ -->
-    <div class="section">
-      <h2>Paciento būklė</h2>
-      <div class="checks">
-        <label><input type="checkbox" id="ramus" /> Ramus</label>
-        <label><input type="checkbox" id="orientuotas" /> Orientuotas</label>
-        <label><input type="checkbox" id="suvarzymas" /> Suvaržymas</label>
-      </div>
-      <div class="hint">Jei nepažymėta – įrašas bus: „Pacientas: neramus, neorientuotas“.</div>
-    </div>
+  <!-- KVĖPAVIMO SISTEMA -->
+  <div class="section">
+    <h2>Kvėpavimo sistema</h2>
 
-    <!-- KVĖPAVIMO SISTEMA -->
-    <div class="section">
-      <h2>Kvėpavimo sistema</h2>
+    <label for="trach">Tracheostominis vamzdis
+      <select id="trach" name="trach">
+        <option value="nera">Nėra</option>
+        <option value="yra">Yra</option>
+      </select>
+    </label>
 
-      <label for="trach">Tracheostominis vamzdis
-        <select id="trach" name="trach">
-          <option value="ne">Nėra</option><option value="taip">Yra</option>
+    <div class="row">
+      <label for="sekretas">Sekretas / atkosėjimas iš vamzdelio
+        <select id="sekretas" name="sekretas">
+          <option value="ne">Ne</option><option value="taip">Taip</option>
         </select>
       </label>
 
-      <div class="row">
-        <label for="sekretas_trach">Sekretas / atkosėjimas iš vamzdžio?
-          <select id="sekretas_trach" name="sekretas_trach">
-            <option value="ne">Ne</option><option value="taip">Taip</option>
-          </select>
-        </label>
-
-        <label for="siurbimas">Atliekamas siurbimas?
-          <select id="siurbimas" name="siurbimas">
-            <option value="ne">Ne</option><option value="taip">Taip</option>
-          </select>
-        </label>
-      </div>
-
-      <label for="dusulys">Dusulys?
-        <select id="dusulys" name="dusulys">
+      <label for="siurbimas">Atliekamas siurbimas?
+        <select id="siurbimas" name="siurbimas">
           <option value="ne">Ne</option><option value="taip">Taip</option>
         </select>
       </label>
     </div>
 
+    <label for="dusulys">Dusulys?
+      <select id="dusulys" name="dusulys">
+        <option value="ne">Ne</option><option value="taip">Taip</option>
+      </select>
+    </label>
+  </div>
+
   <!-- GYVYBINIAI RODIKLIAI (su NEWS laukais vienoje kortelėje) -->
-<div class="section">
-  <h2>Gyvybiniai rodikliai</h2>
+  <div class="section vitals">
+    <h2>Gyvybiniai rodikliai</h2>
 
-  <!-- 1 eilė -->
-  <div class="row">
-    <label for="saturacija">SpO₂ (%)
-      <input id="saturacija" name="saturacija" inputmode="decimal" placeholder="pvz. 96" />
-    </label>
+    <!-- 1 eilė -->
+    <div class="row">
+      <label for="saturacija">SpO₂ (%)
+        <input id="saturacija" name="saturacija" inputmode="numeric" placeholder="pvz. 96" />
+      </label>
 
-    <label for="kvepavimo_daznis">Kvėpavimo dažnis (RR) / min
-      <input id="kvepavimo_daznis" name="kvepavimo_daznis" inputmode="decimal" placeholder="pvz. 16" />
-    </label>
-  </div>
-
-  <!-- 2 eilė -->
-  <div class="row">
-    <label for="sistolinis">AKS sistolinis
-      <input id="sistolinis" name="sistolinis" inputmode="decimal" placeholder="pvz. 120" />
-    </label>
-
-    <label for="diastolinis">AKS diastolinis
-      <input id="diastolinis" name="diastolinis" inputmode="decimal" placeholder="pvz. 75" />
-    </label>
-  </div>
-
-  <!-- 3 eilė -->
-  <div class="row">
-    <label for="pulsas">Pulsas / min
-      <input id="pulsas" name="pulsas" inputmode="decimal" placeholder="pvz. 82" />
-    </label>
-
-    <label for="temperatura">Temperatūra (°C)
-      <input id="temperatura" name="temperatura" inputmode="decimal" placeholder="pvz. 36.6" />
-    </label>
-  </div>
-
-  <!-- 4 eilė: NEWS papildomi -->
-  <div class="row">
-    <label for="papildomas_o2">Papildomas O₂?
-      <select id="papildomas_o2" name="papildomas_o2">
-        <option value="ne">Ne</option>
-        <option value="taip">Taip</option>
-      </select>
-    </label>
-
-    <label for="avpu">AVPU
-      <select id="avpu" name="avpu">
-        <option value="A">A – budrus</option>
-        <option value="V">V – reaguoja į balsą</option>
-        <option value="P">P – reaguoja į skausmą</option>
-        <option value="U">U – reakcijos nėra</option>
-      </select>
-    </label>
-  </div>
-
-  <div class="hint">
-    Suvedus visus rodiklius (RR, SpO₂, AKS, ŠSD, T, AVPU ir ar taikomas papildomas O₂) sistema paskaičiuos ankstyvojo perspėjimo skalės (NEWS) balą.
-  </div>
-</div>
-
-    <!-- NOSIS -->
-    <div class="section">
-      <h2>Nosis</h2>
-       <label for="nosis">Nosis
-         <select id="nosis" name="nosis">
-       <option value="nedaryta">Niekas nedaryta</option>
-      <option value="tamponuota">Tamponuota nosis</option>
-    <option value="istraukti">Ištraukti tamponai</option>
-  </select>
-</label>
-
+      <label for="kvepavimo_daznis">Kvėpavimo dažnis (RR) / min
+        <input id="kvepavimo_daznis" name="kvepavimo_daznis" inputmode="numeric" placeholder="pvz. 16" />
+      </label>
     </div>
 
-    <!-- MITYBA -->
-    <div class="section">
-      <h2>Mityba</h2>
-      <label for="mityba">Mityba
-        <select id="mityba" name="mityba">
-          <option value="burna">Per burną</option>
-          <option value="peg">Per PEG</option>
-          <option value="zondas">Per zondą (NG)</option>
+    <!-- 2 eilė -->
+    <div class="row">
+      <label for="sistolinis">AKS sistolinis
+        <input id="sistolinis" name="sistolinis" inputmode="numeric" placeholder="pvz. 120" />
+      </label>
+
+      <label for="diastolinis">AKS diastolinis
+        <input id="diastolinis" name="diastolinis" inputmode="numeric" placeholder="pvz. 75" />
+      </label>
+    </div>
+
+    <!-- 3 eilė -->
+    <div class="row">
+      <label for="pulsas">Pulsas / min
+        <input id="pulsas" name="pulsas" inputmode="numeric" placeholder="pvz. 82" />
+      </label>
+
+      <label for="temperatura">Temperatūra (°C)
+        <input id="temperatura" name="temperatura" inputmode="decimal" placeholder="pvz. 36.6" />
+      </label>
+    </div>
+
+    <!-- 4 eilė: NEWS papildomi -->
+    <div class="row">
+      <label for="papildomas_o2">Papildomas O₂?
+        <select id="papildomas_o2" name="papildomas_o2">
+          <option value="ne">Ne</option>
+          <option value="taip">Taip</option>
         </select>
       </label>
 
-      <div class="row">
-        <label for="rijimas">Rijimas apsunkintas?
-          <select id="rijimas" name="rijimas">
-            <option value="ne">Ne</option><option value="taip">Taip</option>
-          </select>
-        </label>
-
-        <label for="suvalgo">Suvartoja visą maistą?
-          <select id="suvalgo" name="suvalgo">
-            <option value="taip">Taip</option><option value="ne">Ne</option>
-          </select>
-        </label>
-      </div>
+      <label for="avpu">AVPU
+        <select id="avpu" name="avpu">
+          <option value="A">A – budrus</option>
+          <option value="V">V – reaguoja į balsą</option>
+          <option value="P">P – reaguoja į skausmą</option>
+          <option value="U">U – reakcijos nėra</option>
+        </select>
+      </label>
     </div>
 
-    <!-- ŠALINIMAS -->
-    <div class="section">
-      <h2>Šalinimas</h2>
+    <div class="hint">
+      Suvedus visus rodiklius (RR, SpO₂, AKS, ŠSD, T, AVPU ir ar taikomas papildomas O₂) sistema paskaičiuos ankstyvojo perspėjimo skalės (NEWS) balą.
+    </div>
+  </div>
 
-      <label for="kateteris">Šlapimo kateteris
-        <select id="kateteris" name="kateteris">
+  <!-- NOSIS -->
+  <div class="section">
+    <h2>Nosis</h2>
+    <label for="nosis">Nosis
+      <select id="nosis" name="nosis">
+        <option value="nedaryta">Niekas nedaryta</option>
+        <option value="tamponuota">Tamponuota nosis</option>
+        <option value="istraukti">Ištraukti tamponai</option>
+      </select>
+    </label>
+  </div>
+
+  <!-- MITYBA -->
+  <div class="section">
+    <h2>Mityba</h2>
+    <label for="mityba">Mityba
+      <select id="mityba" name="mityba">
+        <option value="burna">Per burną</option>
+        <option value="peg">Per PEG</option>
+        <option value="zondas">Per zondą (NG)</option>
+      </select>
+    </label>
+
+    <div class="row">
+      <label for="rijimas">Rijimas apsunkintas?
+        <select id="rijimas" name="rijimas">
+          <option value="ne">Ne</option><option value="taip">Taip</option>
+        </select>
+      </label>
+
+      <label for="suvalgo">Suvartoja visą maistą?
+        <select id="suvalgo" name="suvalgo">
+          <option value="taip">Taip</option><option value="ne">Ne</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <!-- ŠALINIMAS -->
+  <div class="section">
+    <h2>Šalinimas</h2>
+
+    <label for="kateteris">Šlapimo kateteris
+      <select id="kateteris" name="kateteris">
+        <option value="nera">Nėra</option><option value="yra">Yra</option>
+      </select>
+    </label>
+
+    <div class="row">
+      <label for="viduriai">Vidurių užkietėjimas?
+        <select id="viduriai" name="viduriai">
+          <option value="ne">Ne</option><option value="taip">Taip</option>
+        </select>
+      </label>
+    </div>
+
+    <label for="viduriavimas">Viduriavimas?
+      <select id="viduriavimas" name="viduriavimas">
+        <option value="ne">Ne</option><option value="taip">Taip</option>
+      </select>
+    </label>
+  </div>
+
+  <!-- JUDĖJIMAS -->
+  <div class="section">
+    <h2>Judėjimas</h2>
+    <label for="mobilumas">Mobilumas
+      <select id="mobilumas" name="mobilumas">
+        <option value="sav">Savarankiškas</option>
+        <option value="pagalba">Su pagalba</option>
+        <option value="lova">Lovos režimas</option>
+      </select>
+    </label>
+  </div>
+
+  <!-- MIEGAS -->
+  <div class="section">
+    <h2>Miegas</h2>
+    <label for="miegas">Miego kokybė
+      <select id="miegas" name="miegas">
+        <option value="gera">Gera</option>
+        <option value="sutrikusi">Sutrikusi</option>
+      </select>
+    </label>
+  </div>
+
+  <!-- ODA -->
+  <div class="section">
+    <h2>Oda</h2>
+
+    <div class="row">
+      <label for="pragulos">Pragulos
+        <select id="pragulos" name="pragulos">
           <option value="nera">Nėra</option><option value="yra">Yra</option>
         </select>
       </label>
 
-      <div class="row">
-        <label for="viduriai">Vidurių užkietėjimas?
-          <select id="viduriai" name="viduriai">
-            <option value="ne">Ne</option><option value="taip">Taip</option>
-          </select>
-        </label>
-      </div>
+      <label for="zaizdos">Žaizdos
+        <select id="zaizdos" name="zaizdos">
+          <option value="nera">Nėra</option><option value="yra">Yra</option>
+        </select>
+      </label>
+    </div>
 
-      <label for="viduriavimas">Viduriavimas?
-        <select id="viduriavimas" name="viduriavimas">
+    <div id="zaizdos_aprasymas" style="display:none;">
+      <label for="zaizdos_text">Žaizdos aprašymas
+        <textarea id="zaizdos_text" name="zaizdos_text" placeholder="Lokalizacija, dydis, sekrecija, paraudimas, skausmingumas."></textarea>
+      </label>
+    </div>
+  </div>
+
+  <!-- SKAUSMAS -->
+  <div class="section" id="skausmas_section">
+    <h2>Skausmas</h2>
+
+    <div class="row">
+      <label for="skausmas">Ar pacientas jaučia skausmą?
+        <select id="skausmas" name="skausmas">
           <option value="ne">Ne</option><option value="taip">Taip</option>
         </select>
       </label>
-    </div>
 
-    <!-- JUDĖJIMAS -->
-    <div class="section">
-      <h2>Judėjimas</h2>
-      <label for="mobilumas">Mobilumas
-        <select id="mobilumas" name="mobilumas">
-          <option value="sav">Savarankiškas</option>
-          <option value="pagalba">Su pagalba</option>
-          <option value="lova">Lovos režimas</option>
-        </select>
+      <label for="skausmoLygis">NRS (0–10)
+        <input id="skausmoLygis" name="skausmoLygis" inputmode="numeric" placeholder="pvz. 5" />
       </label>
     </div>
 
-    <!-- MIEGAS -->
-    <div class="section">
-      <h2>Miegas</h2>
-      <label for="miegas">Miego kokybė
-        <select id="miegas" name="miegas">
-          <option value="gera">Gera</option>
-          <option value="sutrikusi">Sutrikusi</option>
-        </select>
-      </label>
-    </div>
+    <button type="button" class="secondary" id="openDvprsBtn" style="margin-top:10px">
+      Atidaryti DVPRS skausmo skalę (pacientui)
+    </button>
 
-    <!-- ODA -->
-    <div class="section">
-      <h2>Oda</h2>
-
-      <div class="row">
-        <label for="pragulos">Pragulos
-          <select id="pragulos" name="pragulos">
-            <option value="nera">Nėra</option><option value="yra">Yra</option>
-          </select>
-        </label>
-
-        <label for="zaizdos">Žaizdos
-          <select id="zaizdos" name="zaizdos">
-            <option value="nera">Nėra</option><option value="yra">Yra</option>
-          </select>
-        </label>
-      </div>
-
-      <div id="zaizdos_aprasymas" style="display:none;">
-        <label for="zaizdos_text">Žaizdos aprašymas
-          <textarea id="zaizdos_text" name="zaizdos_text" placeholder="Lokalizacija, dydis, sekrecija, paraudimas, skausmingumas."></textarea>
-        </label>
-      </div>
-    </div>
-
-    <!-- SKAUSMAS -->
-    <div class="section" id="skausmas_section">
-      <h2>Skausmas</h2>
-
-      <div class="row">
-        <label for="skausmas">Ar pacientas jaučia skausmą?
-          <select id="skausmas" name="skausmas">
-            <option value="ne">Ne</option><option value="taip">Taip</option>
-          </select>
-        </label>
-
-        <label for="skausmoLygis">NRS (0–10)
-          <input id="skausmoLygis" name="skausmoLygis" inputmode="numeric" placeholder="pvz. 5" />
-        </label>
-      </div>
-
-      <button type="button" class="secondary" id="openDvprsBtn" style="margin-top:10px">
-        Atidaryti DVPRS skausmo skalę (pacientui)
-      </button>
-
-      <div class="hint">DVPRS pasirinkimas automatiškai įrašo NRS skaičių į lauką.</div>
-    </div>
-
-    <!-- DIETA -->
-    <div class="section">
-      <h2>Dieta</h2>
-      <label for="dieta_kodas">Dieta (kodas)
-        <select id="dieta_kodas" name="dieta_kodas">
-          <option value="">—</option>
-          <option value="P1">P1</option>
-          <option value="P4">P4</option>
-          <option value="PTM">PTM</option>
-          <option value="TM">TM</option>
-          <option value="SM">SM</option>
-          <option value="CD">CD</option>
-          <option value="PTM-CD">PTM-CD</option>
-          <option value="Na">Na</option>
-          <option value="Sk(padid.)">Sk(padid.)</option>
-          <option value="Sk(maž.)">Sk(maž.)</option>
-          <option value="B">B</option>
-          <option value="Lac">Lac</option>
-          <option value="NPB">NPB</option>
-          <option value="KITA">Kita (įrašyti)</option>
-        </select>
-      </label>
-
-      <div id="dieta_kita_wrap" style="display:none;">
-        <label for="dieta_kita">Įrašykite dietą
-          <input id="dieta_kita" name="dieta_kita" placeholder="pvz. tyrės konsistencija, be laktozės ir t. t." />
-        </label>
-      </div>
-    </div>
-
-    <!-- KRAUJAVIMO RIZIKA -->
-    <div class="section">
-      <h2>Kraujavimas</h2>
-      <label for="kraujavimo_rizika">Kraujavimo rizika
-        <select id="kraujavimo_rizika" name="kraujavimo_rizika">
-          <option value="nera">Nėra</option>
-          <option value="yra">Yra</option>
-        </select>
-      </label>
-      <div class="hint">Jei „Yra“ – plane: „Stebėjimas dėl galimo kraujavimo“, „AKS sekimas“.</div>
-    </div>
-
-    <!-- PIRMINIS VERTINIMAS -->
-    <div class="section" style="grid-column:1 / -1">
-      <details class="pv" id="pv_section">
-        <summary>Pirminis vertinimas <span class="hint">(spustelėkite)</span></summary>
-        <div class="pv-content">
-          <div class="checks" style="margin-top:6px">
-            <label><input type="checkbox" id="pv_cv"> Širdies–kraujotakos</label>
-            <label><input type="checkbox" id="pv_resp"> Kvėpavimo</label>
-            <label><input type="checkbox" id="pv_endo_cd"> Endokrininės (CD)</label>
-            <label><input type="checkbox" id="pv_renal_hep"> Inkstų/kepenų</label>
-          </div>
-
-          <label style="margin-top:10px">Infekcinės ligos (įrašykite)
-            <input id="pv_infection" placeholder="pvz. MRSA, C. difficile, TB, COVID." />
-          </label>
-
-          <label style="margin-top:10px">Alergijos
-            <textarea id="pv_allergy" rows="2" placeholder="pvz. penicilinai, lateksas, maistas."></textarea>
-          </label>
-
-          <div class="hint" style="margin-top:6px">
-            Pažymėtos sritys automatiškai pridės atitinkamas intervencijas prie bendro slaugos plano.
-          </div>
-        </div>
-      </details>
-    </div>
-
+    <div class="hint">DVPRS pasirinkimas automatiškai įrašo NRS skaičių į lauką.</div>
   </div>
 
-  <div class="actions">
-    <button type="button" id="genBtn" onclick="generateResults()">Generuoti</button>
-    <button type="button" id="resetBtn" class="secondary">Naujas pacientas</button>
-    <button type="button" class="good" onclick="keltiISistema()">Kelti į sistemą</button>
+  <!-- DIETA -->
+  <div class="section">
+    <h2>Dieta</h2>
+    <label for="dieta_kodas">Dieta (kodas)
+      <select id="dieta_kodas" name="dieta_kodas">
+        <option value="">—</option>
+        <option value="P1">P1</option>
+        <option value="P4">P4</option>
+        <option value="PTM">PTM</option>
+        <option value="TM">TM</option>
+        <option value="SM">SM</option>
+        <option value="CD">CD</option>
+        <option value="PTM-CD">PTM-CD</option>
+        <option value="Na">Na</option>
+        <option value="Sk(padid.)">Sk(padid.)</option>
+        <option value="Sk(maž.)">Sk(maž.)</option>
+        <option value="B">B</option>
+        <option value="Lac">Lac</option>
+        <option value="NPB">NPB</option>
+        <option value="KITA">Kita…</option>
+      </select>
+    </label>
+
+    <div id="dieta_kita_wrap" style="display:none; margin-top:10px">
+      <label for="dieta_kita">Įrašykite dietą ranka
+        <input id="dieta_kita" placeholder="pvz. be glitimo, be kiaušinių." />
+      </label>
+      <div class="hint">„Kita“ – plane nieko nepridėsime, tik konstatuosime dietą įraše.</div>
+    </div>
   </div>
-</form>
 
-<div id="results" class="results" aria-live="polite"></div>
-<div id="statusOk" class="status ok">✅ Duomenys įkelti sėkmingai.</div>
-<div id="statusErr" class="status err">❌ Klaida siunčiant į Google Sheets. Patikrinkite WebApp adresą ir leidimus.</div>
+  <!-- KRAUJAVIMO RIZIKA -->
+  <div class="section">
+    <h2>Kraujavimas</h2>
+    <label for="kraujavimo_rizika">Kraujavimo rizika
+      <select id="kraujavimo_rizika" name="kraujavimo_rizika">
+        <option value="nera">Nėra</option>
+        <option value="yra">Yra</option>
+      </select>
+    </label>
+    <div class="hint">Jei „Yra“ – plane: „Stebėjimas dėl galimo kraujavimo“, „AKS sekimas“.</div>
+  </div>
 
-<!-- DVPRS MODAL -->
-<div id="dvprsModal" class="modal" aria-hidden="true">
-  <div class="modal__backdrop" id="dvprsCloseBackdrop"></div>
+  <!-- PIRMINIS VERTINIMAS -->
+  <div class="section" style="grid-column:1 / -1">
+    <details class="pv" id="pv_section">
+      <summary>Pirminis vertinimas <span class="hint">(spustelėkite)</span></summary>
+      <div class="pv-content">
+        <div class="checks" style="margin-top:6px">
+          <label><input type="checkbox" id="pv_cv"> Širdies–kraujotakos</label>
+          <label><input type="checkbox" id="pv_resp"> Kvėpavimo</label>
+          <label><input type="checkbox" id="pv_endo_cd"> Endokrininės (CD)</label>
+          <label><input type="checkbox" id="pv_renal_hep"> Inkstų/kepenų</label>
+        </div>
 
-  <div class="modal__sheet" role="dialog" aria-modal="true" aria-labelledby="dvprsTitle">
-    <div class="modal__header">
-      <div>
-        <div id="dvprsTitle" class="modal__title">DVPRS skausmo skalė (0–10)</div>
-        <div class="modal__subtitle">
-          Pacientas pasirenka skaičių. Pasirinkimas automatiškai įrašomas į NRS lauką.
+        <label style="margin-top:10px">Infekcinės ligos (įrašykite)
+          <input id="pv_infection" placeholder="pvz. MRSA, C. difficile, TB, COVID." />
+        </label>
+
+        <label style="margin-top:10px">Alergijos
+          <textarea id="pv_allergy" rows="2" placeholder="pvz. penicilinai, lateksas, maistas."></textarea>
+        </label>
+
+        <div class="hint" style="margin-top:6px">
+          Pažymėtos sritys automatiškai pridės atitinkamas intervencijas prie bendro slaugos plano.
         </div>
       </div>
-      <button type="button" class="modal__close" id="dvprsCloseBtn" aria-label="Uždaryti">✕</button>
+    </details>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="section" id="output">
+    <h2>Rezultatas</h2>
+    <div class="actions">
+      <button class="primary" id="btnGenerate" type="button">Generuoti</button>
+      <button class="secondary" id="btnReset" type="button">Naujas pacientas</button>
+      <button class="primary" style="background:var(--ok)" id="btnCopy" type="button">Kelti į sistemą</button>
+    </div>
+    <div id="result" style="margin-top:10px"></div>
+  </div>
+
+</div>
+
+<!-- DVPRS modal -->
+<div class="modal" id="dvprsModal" aria-hidden="true">
+  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="dvprsTitle">
+    <div class="modal__head">
+      <div class="modal__title" id="dvprsTitle">DVPRS skausmo skalė</div>
+      <button type="button" class="secondary xbtn" id="dvprsCloseX" aria-label="Uždaryti">✕</button>
     </div>
 
-    <div class="dvprsLegend">
-      Spalvos ir veidukai padeda greičiau susiorientuoti. Vertinimą patvirtina paciento pasirinktas skaičius (0–10).
-    </div>
+    <div class="modal__body">
+      <div class="dvprsLegend">
+        <div class="dvprsCard">
+          <h5>Kaip naudoti</h5>
+          <div class="hint">Pacientas pasirenka veiduką/tašką (0–10). Vertinimą patvirtina paciento pasirinktas skaičius (0–10).</div>
+        </div>
+        <div class="dvprsCard">
+          <h5>Pastaba</h5>
+          <div class="hint">Pasirinktas DVPRS balas automatiškai įrašomas į NRS lauką „Skausmas“ kortelėje.</div>
+        </div>
+      </div>
 
-    <div id="dvprsGrid" class="dvprsGrid"></div>
+      <div id="dvprsGrid" class="dvprsGrid"></div>
+    </div>
 
     <div class="modal__footer">
       <button type="button" class="secondary" id="dvprsCancelBtn">Uždaryti</button>
@@ -625,6 +503,7 @@ input[type="checkbox"]{
 </div>
 
 <script>
+
 /* =========================================================
    SLAUGOS PLANAS — TVARKINGAI SUSKALDYTAS KODAS
    Kaip taisyti ateityje:
@@ -1552,6 +1431,7 @@ function resetForm(){
 
 </body>
 </html>
+
 
 
 
