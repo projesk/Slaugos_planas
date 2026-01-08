@@ -676,6 +676,14 @@ const slaugosPlanas = {
     "Odos priežiūra tarpvietėje",
     "Skysčių balanso stebėjimas"
   ],
+"Gulimas režimas ir pragulos": [
+  "Odos būklės stebėjimas",
+  "Pozicionavimas pagal būklę kas 2–3 valandas",
+  "Pagalbinės priemonės paciento pozicionavimui",
+  "Pragulos perrišimas pagal žaizdų priežiūros planą",
+  "Naujų pragulų atsiradimo profilaktika"
+],
+ 
   "Sutrikęs miegas": [
     "Miego ir poilsio režimo vertinimas",
     "Aplinkos veiksnių korekcija (triukšmas, šviesa, temperatūra)",
@@ -899,9 +907,17 @@ if (f['dusulys'].value === 'taip') {
     esamos.push("Sutrikęs miegas");
   }
 
-  // --- Judėjimas
-  if(f['mobilumas'].value==='lova') galimos.push("Rizika praguloms dėl lovos režimo");
-  if(f['mobilumas'].value==='pagalba') galimos.push("Rizika griuvimui dėl pagalbos poreikio");
+// --- Judėjimas / pragulos (sujungta logika)
+if(f['mobilumas'].value === 'lova' && f['pragulos'].value === 'yra'){
+  esamos.push("Gulimas režimas ir pragulos");
+}
+else{
+  if(f['mobilumas'].value === 'lova')
+    galimos.push("Rizika praguloms dėl lovos režimo");
+
+  if(f['pragulos'].value === 'yra')
+    esamos.push("Pragulos");
+}
 
   // --- Oda
   if(f['pragulos'].value==='yra') esamos.push("Pragulos");
@@ -910,30 +926,48 @@ if (f['dusulys'].value === 'taip') {
     esamos.push("Odos vientisumo pažeidimas (žaizda)"+(apr?(" – "+apr):""));
   }
 
-  // --- Skausmas (PAKEISTA VIETA: intervalas + konkretus balas)
-  if(f['skausmas'].value==='taip'){
-    const val = toNum(f['skausmoLygis'].value);
+// --- Skausmas
+if(f['skausmas'].value === 'taip'){
+  const val = toNum(f['skausmoLygis'].value);
 
-    if(val==null || val<0 || val>10){
-      alert("Įveskite skausmo intensyvumą (0–10).");
-      $('skausmoLygis').focus();
-      return { error:true };
-    }
-
-    let painBase = "";
-    if(val>=1 && val<=3) painBase="Nedidelis skausmas (1–3/10)";
-    else if(val>=4 && val<=6) painBase="Vidutinis skausmas (4–6/10)";
-    else if(val>=7 && val<=10) painBase="Didelis skausmas (7–10/10)";
-    else painBase="Skausmas (0/10)";
-
-    // ✅ čia esminė pataisa:
-    const painLabel = `${painBase} – ${val}/10`;
-
-    if(val>0) esamos.push(painLabel);
-
-    const sev = val>=7 ? "bad" : val>=4 ? "warn" : "ok";
-    pills.push(classifyPill(`Skausmas ${val}/10`, sev));
+  if(val == null || val < 0 || val > 10){
+    alert("Įveskite skausmo intensyvumą (0–10).");
+    $('skausmoLygis').focus();
+    return { error:true };
   }
+
+  let painRangeKey = "";
+  let painText = "";
+
+  if(val >= 1 && val <= 3){
+    painRangeKey = "Nedidelis skausmas (1–3/10)";
+    painText = "nedidelis skausmas";
+  }
+  else if(val >= 4 && val <= 6){
+    painRangeKey = "Vidutinis skausmas (4–6/10)";
+    painText = "vidutinis skausmas";
+  }
+  else if(val >= 7 && val <= 10){
+    painRangeKey = "Didelis skausmas (7–10/10)";
+    painText = "didelis skausmas";
+  }
+  else{
+    painRangeKey = "Skausmas (0/10)";
+    painText = "skausmo nėra";
+  }
+
+  // 1️⃣ Klinikinis tekstas – KĄ MATO SLAUGYTOJA
+  esamos.push(`${val}/10 (${painText})`);
+
+  // 2️⃣ Techninis raktas – KAD PLANAS „PRISIKABINTŲ“
+  if(val > 0){
+    esamos.push(painRangeKey);
+  }
+
+  // pills (santrauka)
+  const sev = val >= 7 ? "bad" : val >= 4 ? "warn" : "ok";
+  pills.push(classifyPill(`Skausmas ${val}/10`, sev));
+}
 
   // --- Kraujavimas
   if(f['kraujavimo_rizika'].value==='yra') galimos.push("Kraujavimo rizika");
@@ -1158,6 +1192,7 @@ function resetForm(){
 
 </body>
 </html>
+
 
 
 
