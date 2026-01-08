@@ -232,7 +232,28 @@
     .section .row {
       grid-template-columns: 1fr;
     }
+   /* ===== Gyvybiniai – sulygiuoti label aukštį, kad niekas "nenuslystų" ===== */
+.section .row{
+  align-items: start;           /* stabiliau nei center */
+}
+
+.section label{
+  min-height: 74px;             /* sulygina kortelių aukštį per eilutę */
+}
+
+.section label > input,
+.section label > select{
+  margin-top: 6px;              /* vienodas tarpas po tekstu */
+}
   }
+/* ===== Checkbox'ai – kad aiškiai matytųsi pažymėjimas ===== */
+input[type="checkbox"]{
+  appearance: auto !important;
+  -webkit-appearance: auto !important;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
 
 </style>
 
@@ -1531,6 +1552,7 @@ function resetForm(){
 
 </body>
 </html>
+
 
 
 
