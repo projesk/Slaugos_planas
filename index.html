@@ -847,19 +847,20 @@ function detectProblems(f){
 
  // --- Nosis / dusulys
 if (f['nosis'].value === 'tamponuota') {
-  // 1) prie esamų – NIEKO
-  // 2) prie galimų – miego sutrikimai
+  // esama būklė
+  esamos.push("Tamponuota nosis");
+
+  // galimos pasekmės
   galimos.push("Miego sutrikimai");
-  // 3) kad į slaugos planą įkristų nosies tvarščio keitimas
-  galimos.push("Tamponuota nosis");
 }
 else if (f['nosis'].value === 'istraukti') {
-  // paliekam kaip dabar
+  // paliekam kaip buvo
   esamos.push("Nedidelis kraujavimas iš nosies");
 }
-// 'nedaryta' – nieko nepridedam
 
-if (f['dusulys'].value === 'taip') esamos.push("Sutrikusi kvėpavimo funkcija (dusulys)");
+if (f['dusulys'].value === 'taip') {
+  esamos.push("Sutrikusi kvėpavimo funkcija (dusulys)");
+}
 
  
   // --- AKS
@@ -1157,5 +1158,6 @@ function resetForm(){
 
 </body>
 </html>
+
 
 
