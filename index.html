@@ -265,12 +265,14 @@
     <!-- NOSIS -->
     <div class="section">
       <h2>Nosis</h2>
-      <label for="nosis">Nosis
-        <select id="nosis" name="nosis">
-          <option value="ok">Be pakitimų</option>
-          <option value="istraukti">Traukta / kraujavo</option>
-        </select>
-      </label>
+       <label for="nosis">Nosis
+         <select id="nosis" name="nosis">
+       <option value="nedaryta">Niekas nedaryta</option>
+      <option value="tamponuota">Tamponuota nosis</option>
+    <option value="istraukti">Ištraukti tamponai</option>
+  </select>
+</label>
+
     </div>
 
     <!-- MITYBA -->
@@ -589,6 +591,11 @@ const slaugosPlanas = {
     "AKS stebėjimas kraujavimui nestojant",
     "Pacientas apmokintas kaip prižiūrėti nosį kraujavimui sustojus"
   ],
+
+ "Tamponuota nosis": [
+  "Nosies tvarščio keitimas"
+],
+
   "Sutrikusi kvėpavimo funkcija (dusulys)": [
     "SpO₂ stebėjimas",
     "Prireikus O₂ skyrimas pagal SpO₂"
@@ -838,10 +845,23 @@ function detectProblems(f){
     esamos.push("Kvėpavimo takai su tracheostominiu vamzdžiu");
   }
 
-  // --- Nosis / dusulys
-  if(f['nosis'].value==='istraukti') esamos.push("Nedidelis kraujavimas iš nosies");
-  if(f['dusulys'].value==='taip') esamos.push("Sutrikusi kvėpavimo funkcija (dusulys)");
+ // --- Nosis / dusulys
+if (f['nosis'].value === 'tamponuota') {
+  // 1) prie esamų – NIEKO
+  // 2) prie galimų – miego sutrikimai
+  galimos.push("Miego sutrikimai");
+  // 3) kad į slaugos planą įkristų nosies tvarščio keitimas
+  galimos.push("Tamponuota nosis");
+}
+else if (f['nosis'].value === 'istraukti') {
+  // paliekam kaip dabar
+  esamos.push("Nedidelis kraujavimas iš nosies");
+}
+// 'nedaryta' – nieko nepridedam
 
+if (f['dusulys'].value === 'taip') esamos.push("Sutrikusi kvėpavimo funkcija (dusulys)");
+
+ 
   // --- AKS
   if(sys!=null && dia!=null){
     if(sys < THRESHOLDS.sysLow || (map!=null && map < THRESHOLDS.mapLow)) esamos.push("Pažemėjęs kraujo spaudimas");
@@ -1137,4 +1157,5 @@ function resetForm(){
 
 </body>
 </html>
+
 
