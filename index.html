@@ -261,6 +261,32 @@
         </label>
       </div>
     </div>
+   <label for="kvepavimo_daznis">Kvėpavimo dažnis (RR) / min
+  <input id="kvepavimo_daznis" name="kvepavimo_daznis" inputmode="decimal" placeholder="pvz. 16" />
+</label>
+
+<div class="row">
+  <label for="papildomas_o2">Papildomas O₂?
+    <select id="papildomas_o2" name="papildomas_o2">
+      <option value="ne">Ne</option>
+      <option value="taip">Taip</option>
+    </select>
+  </label>
+
+  <label for="avpu">AVPU
+    <select id="avpu" name="avpu">
+      <option value="A">A – budrus</option>
+      <option value="V">V – reaguoja į balsą</option>
+      <option value="P">P – reaguoja į skausmą</option>
+      <option value="U">U – reakcijos nėra</option>
+    </select>
+  </label>
+</div>
+   
+   <div class="hint">
+  Suvedus visus rodiklius (RR, SpO₂, AKS, ŠSD, T, AVPU ir ar taikomas papildomas O₂) sistema paskaičiuos ankstyvojo perspėjimo skalės (NEWS) balą.
+</div>
+
 
     <!-- NOSIS -->
     <div class="section">
@@ -552,6 +578,89 @@ function vitalsText(spo2, sys, dia, map, hr, temp){
   const h   = (hr!=null) ? `${hr}/min` : "-";
   return `SpO₂: ${s}, AKS: ${aks}, ŠSD: ${h}, T: ${t}`;
 }
+ function calcNewsScore({ rr, spo2, onO2, temp, sys, hr, avpu }){
+  let score = 0;
+  let maxSingle = 0;
+
+  // RR
+  let s = 0;
+  if(rr==null) s = 0;
+  else if(rr <= 8) s = 3;
+  else if(rr <= 11) s = 1;
+  else if(rr <= 20) s = 0;
+  else if(rr <= 24) s = 2;
+  else s = 3;
+  score += s; maxSingle = Math.max(maxSingle, s);
+
+  // SpO2 (NEWS2 Scale 1)
+  s = 0;
+  if(spo2==null) s = 0;
+  else if(spo2 <= 91) s = 3;
+  else if(spo2 <= 93) s = 2;
+  else if(spo2 <= 95) s = 1;
+  else s = 0;
+  score += s; maxSingle = Math.max(maxSingle, s);
+
+  // Supplemental O2
+  s = onO2 ? 2 : 0;
+  score += s; maxSingle = Math.max(maxSingle, s);
+
+  // Temperature
+  s = 0;
+  if(temp==null) s = 0;
+  else if(temp <= 35.0) s = 3;
+  else if(temp <= 36.0) s = 1;
+  else if(temp <= 38.0) s = 0;
+  else if(temp <= 39.0) s = 1;
+  else s = 2;
+  score += s; maxSingle = Math.max(maxSingle, s);
+
+  // Systolic BP
+  s = 0;
+  if(sys==null) s = 0;
+  else if(sys <= 90) s = 3;
+  else if(sys <= 100) s = 2;
+  else if(sys <= 110) s = 1;
+  else if(sys <= 219) s = 0;
+  else s = 3;
+  score += s; maxSingle = Math.max(maxSingle, s);
+
+  // HR
+  s = 0;
+  if(hr==null) s = 0;
+  else if(hr <= 40) s = 3;
+  else if(hr <= 50) s = 1;
+  else if(hr <= 90) s = 0;
+  else if(hr <= 110) s = 1;
+  else if(hr <= 130) s = 2;
+  else s = 3;
+  score += s; maxSingle = Math.max(maxSingle, s);
+
+  // AVPU (be C)
+  s = 0;
+  if(avpu === 'A') s = 0;
+  else if(avpu === 'V' || avpu === 'P' || avpu === 'U') s = 3;
+  score += s; maxSingle = Math.max(maxSingle, s);
+
+  return { score, maxSingle };
+}
+
+function newsRecommendations(score, maxSingle){
+  // paprastas, aiškus slaugytojiškas eskalavimo tekstas
+  if(score === 0){
+    return "0 balų: rutina. Kartoti gyvybinius pagal įprastą skyrių tvarką.";
+  }
+  if(score >= 1 && score <= 4 && maxSingle < 3){
+    return "1–4 balai: padidinta stebėsena. Kartoti gyvybinius dažniau (pvz. kas 4–6 val.) ir įvertinti bendrą būklę.";
+  }
+  if(score >= 1 && score <= 4 && maxSingle >= 3){
+    return "Bet kuris 3 balų parametras: būtinas skubus slaugytojos būklės įvertinimas ir informuoti gydytoją pagal skyrių tvarką. Kartoti gyvybinius dažniau (pvz. kas 1 val.).";
+  }
+  if(score >= 5 && score <= 6){
+    return "5–6 balai: vidutinė rizika. Skubiai informuoti gydytoją, dažna stebėsena (pvz. kas 30–60 min.), svarstyti papildomą pagalbą/monitoravimą.";
+  }
+  return "≥7 balai: aukšta rizika. Nedelsiant eskaluoti (skubus gydytojo įvertinimas / reanimacijos komanda pagal įstaigos tvarką), nuolatinė ar labai dažna stebėsena.";
+}
 
 /* =========================================================
    1) CONFIG  (EDIT HERE #1)
@@ -812,6 +921,9 @@ function detectProblems(f){
   const dia  = toNum(f['diastolinis'].value);
   const hr   = toNum(f['pulsas'].value);
   const map  = calcMAP(sys, dia);
+ const rr   = toNum(f['kvepavimo_daznis'].value);
+const onO2 = (f['papildomas_o2']?.value === 'taip');
+const avpu = (f['avpu']?.value || 'A');
 
   const highSys30 = (sys!=null && sys > THRESHOLDS.sysVeryHigh_30min);
 
@@ -826,6 +938,11 @@ function detectProblems(f){
     } else {
       pills.push(classifyPill(`SpO₂ ${spo2}%`, "ok"));
     }
+   // Jei taikomas papildomas O2 – traukiam planą kaip prie neefektyvios dujų apykaitos
+if(onO2){
+  esamos.push("Neefektyvi dujų apykaita");
+}
+   const news = calcNewsScore({ rr, spo2, onO2, temp, sys, hr, avpu });
   }
 
   // --- Temperatūra
@@ -983,6 +1100,8 @@ if(f['skausmas'].value === 'taip'){
     pills,
     vitals:{spo2,temp,sys,dia,hr,map},
     highSys30
+   news,
+newsText: newsRecommendations(news.score, news.maxSingle),
   };
 }
 
@@ -1104,6 +1223,23 @@ function renderOutput(f, ctx){
   <strong>ŠSD:</strong> ${valOrDash(hr)} / min<br>
   <strong>Temperatūra:</strong> ${temp!=null?temp.toFixed(1):"-"} °C</p>
   <p><strong>Pacientas:</strong> ${escapeHtml(psichoTekstas)}</p>`;
+ // ===== NEWS (ankstyvojo perspėjimo skalė) =====
+const newsScore = ctx.news?.score;
+const newsReco  = ctx.newsText;
+
+html += `<p><strong>Ankstyvojo perspėjimo skalės (NEWS) balas:</strong> ${
+  newsScore != null ? newsScore : "— (trūksta duomenų)"
+}</p>`;
+
+if (newsReco) {
+  html += `
+  <div class="planas">
+    <h4>Rekomendacijos slaugytojai</h4>
+    <ul>
+      <li>${escapeHtml(newsReco)}</li>
+    </ul>
+  </div>`;
+}
 
   if (restraintSentence) html += `<p>${escapeHtml(restraintSentence)}</p>`;
   if(hasDiet){
@@ -1241,6 +1377,7 @@ function resetForm(){
 
 </body>
 </html>
+
 
 
 
