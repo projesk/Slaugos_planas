@@ -173,6 +173,69 @@
     font-size:12px;
     line-height:1.3;
   }
+   @media(max-width:680px){.grid{grid-template-columns:1fr}}
+
+  /* =========================================================
+     GYVYBINIAI RODIKLIAI – VIENINGAS IŠDĖSTYMAS (NEWS)
+  ========================================================= */
+  .section {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .section .row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .section label {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.9rem;
+    color: #333;
+  }
+
+  .section input,
+  .section select {
+    height: 44px;
+    padding: 8px 10px;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .section select {
+    padding-right: 32px;
+  }
+
+  .section input:focus,
+  .section select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  }
+
+  .section .hint {
+    font-size: 0.85rem;
+    color: #555;
+    margin-top: 8px;
+  }
+
+  @media (max-width: 640px) {
+    .section .row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+</style>
+
 </style>
 </head>
 
@@ -235,58 +298,66 @@
       </label>
     </div>
 
-    <!-- GYVYBINIAI -->
-    <div class="section">
-      <h2>Gyvybiniai rodikliai</h2>
+  <!-- GYVYBINIAI RODIKLIAI (su NEWS laukais vienoje kortelėje) -->
+<div class="section">
+  <h2>Gyvybiniai rodikliai</h2>
 
-      <label for="saturacija">SpO₂ (%)
-        <input id="saturacija" name="saturacija" inputmode="decimal" placeholder="pvz. 96" />
-      </label>
+  <!-- 1 eilė -->
+  <div class="row">
+    <label for="saturacija">SpO₂ (%)
+      <input id="saturacija" name="saturacija" inputmode="decimal" placeholder="pvz. 96" />
+    </label>
 
-      <div class="row">
-        <label for="sistolinis">AKS sistolinis
-          <input id="sistolinis" name="sistolinis" inputmode="decimal" placeholder="pvz. 120" />
-        </label>
-        <label for="diastolinis">AKS diastolinis
-          <input id="diastolinis" name="diastolinis" inputmode="decimal" placeholder="pvz. 75" />
-        </label>
-      </div>
+    <label for="kvepavimo_daznis">Kvėpavimo dažnis (RR) / min
+      <input id="kvepavimo_daznis" name="kvepavimo_daznis" inputmode="decimal" placeholder="pvz. 16" />
+    </label>
+  </div>
 
-      <div class="row">
-        <label for="pulsas">Pulsas / min
-          <input id="pulsas" name="pulsas" inputmode="decimal" placeholder="pvz. 82" />
-        </label>
-        <label for="temperatura">Temperatūra (°C)
-          <input id="temperatura" name="temperatura" inputmode="decimal" placeholder="pvz. 36.6" />
-        </label>
-      </div>
-    </div>
-   <label for="kvepavimo_daznis">Kvėpavimo dažnis (RR) / min
-  <input id="kvepavimo_daznis" name="kvepavimo_daznis" inputmode="decimal" placeholder="pvz. 16" />
-</label>
+  <!-- 2 eilė -->
+  <div class="row">
+    <label for="sistolinis">AKS sistolinis
+      <input id="sistolinis" name="sistolinis" inputmode="decimal" placeholder="pvz. 120" />
+    </label>
 
-<div class="row">
-  <label for="papildomas_o2">Papildomas O₂?
-    <select id="papildomas_o2" name="papildomas_o2">
-      <option value="ne">Ne</option>
-      <option value="taip">Taip</option>
-    </select>
-  </label>
+    <label for="diastolinis">AKS diastolinis
+      <input id="diastolinis" name="diastolinis" inputmode="decimal" placeholder="pvz. 75" />
+    </label>
+  </div>
 
-  <label for="avpu">AVPU
-    <select id="avpu" name="avpu">
-      <option value="A">A – budrus</option>
-      <option value="V">V – reaguoja į balsą</option>
-      <option value="P">P – reaguoja į skausmą</option>
-      <option value="U">U – reakcijos nėra</option>
-    </select>
-  </label>
+  <!-- 3 eilė -->
+  <div class="row">
+    <label for="pulsas">Pulsas / min
+      <input id="pulsas" name="pulsas" inputmode="decimal" placeholder="pvz. 82" />
+    </label>
+
+    <label for="temperatura">Temperatūra (°C)
+      <input id="temperatura" name="temperatura" inputmode="decimal" placeholder="pvz. 36.6" />
+    </label>
+  </div>
+
+  <!-- 4 eilė: NEWS papildomi -->
+  <div class="row">
+    <label for="papildomas_o2">Papildomas O₂?
+      <select id="papildomas_o2" name="papildomas_o2">
+        <option value="ne">Ne</option>
+        <option value="taip">Taip</option>
+      </select>
+    </label>
+
+    <label for="avpu">AVPU
+      <select id="avpu" name="avpu">
+        <option value="A">A – budrus</option>
+        <option value="V">V – reaguoja į balsą</option>
+        <option value="P">P – reaguoja į skausmą</option>
+        <option value="U">U – reakcijos nėra</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="hint">
+    Suvedus visus rodiklius (RR, SpO₂, AKS, ŠSD, T, AVPU ir ar taikomas papildomas O₂) sistema paskaičiuos ankstyvojo perspėjimo skalės (NEWS) balą.
+  </div>
 </div>
-   
-   <div class="hint">
-  Suvedus visus rodiklius (RR, SpO₂, AKS, ŠSD, T, AVPU ir ar taikomas papildomas O₂) sistema paskaičiuos ankstyvojo perspėjimo skalės (NEWS) balą.
-</div>
-
 
     <!-- NOSIS -->
     <div class="section">
@@ -546,19 +617,24 @@
    0) BENDRI / HELPERS  (paprastai neliesk)
 ========================================================= */
 const $ = (id) => document.getElementById(id);
+
 function onReady(fn){
   if(document.readyState!=='loading') fn();
   else document.addEventListener('DOMContentLoaded', fn);
 }
+
 function toNum(v){
-  const n = parseFloat(String(v).replace(',', '.'));
+  const n = parseFloat(String(v ?? "").replace(',', '.'));
   return Number.isFinite(n) ? n : null;
 }
+
 function calcMAP(sys, dia){
   if(sys==null || dia==null) return null;
   return Math.round(((2*dia)+sys)/3);
 }
+
 function valOrDash(v){ return (v==null || v==="") ? "-" : v; }
+
 function escapeHtml(s){
   return String(s)
     .replaceAll("&","&amp;")
@@ -566,102 +642,134 @@ function escapeHtml(s){
     .replaceAll(">","&gt;")
     .replaceAll('"',"&quot;");
 }
+
 function classifyPill(text, severity="ok"){
   const cls = severity==="bad" ? "pill bad" : severity==="warn" ? "pill warn" : "pill ok";
   return `<span class="${cls}">${escapeHtml(text)}</span>`;
 }
+
 function uniq(arr){ return [...new Set(arr)].filter(Boolean); }
-function vitalsText(spo2, sys, dia, map, hr, temp){
+
+function vitalsText(spo2, sys, dia, map, hr, temp, rr, onO2, avpu){
   const aks = (sys!=null && dia!=null) ? `${sys}/${dia} mmHg${map!=null ? ` (MAP ${map})` : ""}` : "-";
   const t   = (temp!=null) ? `${temp.toFixed(1)} °C` : "-";
   const s   = (spo2!=null) ? `${spo2} %` : "-";
   const h   = (hr!=null) ? `${hr}/min` : "-";
-  return `SpO₂: ${s}, AKS: ${aks}, ŠSD: ${h}, T: ${t}`;
+  const r   = (rr!=null) ? `${rr}/min` : "-";
+  const o2  = (onO2===true) ? "taip" : (onO2===false) ? "ne" : "-";
+  const a   = avpu ? avpu : "-";
+  return `SpO₂: ${s}, RR: ${r}, O₂: ${o2}, AKS: ${aks}, ŠSD: ${h}, T: ${t}, AVPU: ${a}`;
 }
- function calcNewsScore({ rr, spo2, onO2, temp, sys, hr, avpu }){
+
+/* =========================================================
+   NEWS (ankstyvojo perspėjimo) skaičiavimas
+   Naudojam NEWS2 logiką be "C" ir su SpO₂ Scale 1
+========================================================= */
+
+// Grąžina: { score, maxSingle, complete, missing[] }
+function calcNewsScore({ rr, spo2, onO2, temp, sys, hr, avpu }){
+  const missing = [];
+  if(rr == null)   missing.push("RR");
+  if(spo2 == null) missing.push("SpO₂");
+  if(temp == null) missing.push("T");
+  if(sys == null)  missing.push("AKS (sistolinis)");
+  if(hr == null)   missing.push("ŠSD");
+  if(!avpu)        missing.push("AVPU");
+
+  const complete = missing.length === 0;
+
   let score = 0;
   let maxSingle = 0;
+  const add = (s) => { score += s; maxSingle = Math.max(maxSingle, s); };
 
   // RR
-  let s = 0;
-  if(rr==null) s = 0;
-  else if(rr <= 8) s = 3;
-  else if(rr <= 11) s = 1;
-  else if(rr <= 20) s = 0;
-  else if(rr <= 24) s = 2;
-  else s = 3;
-  score += s; maxSingle = Math.max(maxSingle, s);
+  if(rr != null){
+    let s=0;
+    if(rr <= 8) s = 3;
+    else if(rr <= 11) s = 1;
+    else if(rr <= 20) s = 0;
+    else if(rr <= 24) s = 2;
+    else s = 3;
+    add(s);
+  }
 
-  // SpO2 (NEWS2 Scale 1)
-  s = 0;
-  if(spo2==null) s = 0;
-  else if(spo2 <= 91) s = 3;
-  else if(spo2 <= 93) s = 2;
-  else if(spo2 <= 95) s = 1;
-  else s = 0;
-  score += s; maxSingle = Math.max(maxSingle, s);
+  // SpO2 (Scale 1)
+  if(spo2 != null){
+    let s=0;
+    if(spo2 <= 91) s = 3;
+    else if(spo2 <= 93) s = 2;
+    else if(spo2 <= 95) s = 1;
+    else s = 0;
+    add(s);
+  }
 
   // Supplemental O2
-  s = onO2 ? 2 : 0;
-  score += s; maxSingle = Math.max(maxSingle, s);
+  add(onO2 ? 2 : 0);
 
   // Temperature
-  s = 0;
-  if(temp==null) s = 0;
-  else if(temp <= 35.0) s = 3;
-  else if(temp <= 36.0) s = 1;
-  else if(temp <= 38.0) s = 0;
-  else if(temp <= 39.0) s = 1;
-  else s = 2;
-  score += s; maxSingle = Math.max(maxSingle, s);
+  if(temp != null){
+    let s=0;
+    if(temp <= 35.0) s = 3;
+    else if(temp <= 36.0) s = 1;
+    else if(temp <= 38.0) s = 0;
+    else if(temp <= 39.0) s = 1;
+    else s = 2;
+    add(s);
+  }
 
   // Systolic BP
-  s = 0;
-  if(sys==null) s = 0;
-  else if(sys <= 90) s = 3;
-  else if(sys <= 100) s = 2;
-  else if(sys <= 110) s = 1;
-  else if(sys <= 219) s = 0;
-  else s = 3;
-  score += s; maxSingle = Math.max(maxSingle, s);
+  if(sys != null){
+    let s=0;
+    if(sys <= 90) s = 3;
+    else if(sys <= 100) s = 2;
+    else if(sys <= 110) s = 1;
+    else if(sys <= 219) s = 0;
+    else s = 3;
+    add(s);
+  }
 
   // HR
-  s = 0;
-  if(hr==null) s = 0;
-  else if(hr <= 40) s = 3;
-  else if(hr <= 50) s = 1;
-  else if(hr <= 90) s = 0;
-  else if(hr <= 110) s = 1;
-  else if(hr <= 130) s = 2;
-  else s = 3;
-  score += s; maxSingle = Math.max(maxSingle, s);
+  if(hr != null){
+    let s=0;
+    if(hr <= 40) s = 3;
+    else if(hr <= 50) s = 1;
+    else if(hr <= 90) s = 0;
+    else if(hr <= 110) s = 1;
+    else if(hr <= 130) s = 2;
+    else s = 3;
+    add(s);
+  }
 
   // AVPU (be C)
-  s = 0;
-  if(avpu === 'A') s = 0;
-  else if(avpu === 'V' || avpu === 'P' || avpu === 'U') s = 3;
-  score += s; maxSingle = Math.max(maxSingle, s);
+  if(avpu){
+    let s=0;
+    if(avpu === 'A') s = 0;
+    else if(avpu === 'V' || avpu === 'P' || avpu === 'U') s = 3;
+    add(s);
+  }
 
-  return { score, maxSingle };
+  return { score, maxSingle, complete, missing };
 }
 
-function newsRecommendations(score, maxSingle){
-  // paprastas, aiškus slaugytojiškas eskalavimo tekstas
+function newsRecommendations(score, maxSingle, complete, missing){
+  if(!complete){
+    return `NEWS neskaičiuojamas pilnai – trūksta: ${missing.join(", ")}. Užpildykite visus laukus (RR, SpO₂, AKS sistolinis, ŠSD, T, AVPU, papildomas O₂).`;
+  }
+
   if(score === 0){
-    return "0 balų: rutina. Kartoti gyvybinius pagal įprastą skyrių tvarką.";
+    return "0 balų: rutina. Kartoti gyvybinius pagal įprastą skyriaus tvarką.";
   }
   if(score >= 1 && score <= 4 && maxSingle < 3){
     return "1–4 balai: padidinta stebėsena. Kartoti gyvybinius dažniau (pvz. kas 4–6 val.) ir įvertinti bendrą būklę.";
   }
   if(score >= 1 && score <= 4 && maxSingle >= 3){
-    return "Bet kuris 3 balų parametras: būtinas skubus slaugytojos būklės įvertinimas ir informuoti gydytoją pagal skyrių tvarką. Kartoti gyvybinius dažniau (pvz. kas 1 val.).";
+    return "1–4 balai, bet bent vienas parametras = 3: skubus slaugytojos būklės įvertinimas ir informuoti gydytoją pagal skyriaus tvarką; kartoti gyvybinius dažniau (pvz. kas 1 val.).";
   }
   if(score >= 5 && score <= 6){
-    return "5–6 balai: vidutinė rizika. Skubiai informuoti gydytoją, dažna stebėsena (pvz. kas 30–60 min.), svarstyti papildomą pagalbą/monitoravimą.";
+    return "5–6 balai: vidutinė rizika. Skubiai informuoti gydytoją; dažna stebėsena (pvz. kas 30–60 min.) ir svarstyti papildomą monitoravimą pagal būklę.";
   }
-  return "≥7 balai: aukšta rizika. Nedelsiant eskaluoti (skubus gydytojo įvertinimas / reanimacijos komanda pagal įstaigos tvarką), nuolatinė ar labai dažna stebėsena.";
+  return "≥7 balai: aukšta rizika. Nedelsiant eskaluoti (skubus gydytojo įvertinimas / reanimacijos komanda pagal įstaigos tvarką); nuolatinė ar labai dažna stebėsena.";
 }
-
 /* =========================================================
    1) CONFIG  (EDIT HERE #1)
 ========================================================= */
@@ -907,25 +1015,39 @@ onReady(() => {
 
 /* =========================================================
    5) TAISYKLĖS / PROBLEMŲ ATPAŽINIMAS  (EDIT HERE #3)
-   - ČIA taisom algoritmą (kada atsiranda kuri problema)
-   - Skausmo pataisa: rodys intervalą + konkretų balą
+   - integruota NEWS: RR, papildomas O₂, AVPU
+   - papildomas O₂ → automatiškai "Neefektyvi dujų apykaita"
 ========================================================= */
 function detectProblems(f){
   const esamos = [];
   const galimos = [];
   const pills  = [];
 
-  const spo2 = toNum(f['saturacija'].value);
-  const temp = toNum(f['temperatura'].value);
-  const sys  = toNum(f['sistolinis'].value);
-  const dia  = toNum(f['diastolinis'].value);
-  const hr   = toNum(f['pulsas'].value);
+  // --- Gyvybiniai + NEWS laukų nuskaitymas (saugiai)
+  const spo2 = toNum(f['saturacija']?.value);
+  const rr   = toNum(f['kvepavimo_daznis']?.value);
+  const temp = toNum(f['temperatura']?.value);
+  const sys  = toNum(f['sistolinis']?.value);
+  const dia  = toNum(f['diastolinis']?.value);
+  const hr   = toNum(f['pulsas']?.value);
   const map  = calcMAP(sys, dia);
- const rr   = toNum(f['kvepavimo_daznis'].value);
-const onO2 = (f['papildomas_o2']?.value === 'taip');
-const avpu = (f['avpu']?.value || 'A');
 
+  const onO2 = (f['papildomas_o2']?.value === 'taip');
+  const avpu = (f['avpu']?.value || 'A');
+
+  // >165 – 30 min. AKS sekimas
   const highSys30 = (sys!=null && sys > THRESHOLDS.sysVeryHigh_30min);
+
+  // --- RR pill (nebūtina, bet naudinga)
+  if(rr!=null){
+    pills.push(classifyPill(`RR ${rr}/min`, (rr>=25 || rr<=8) ? "warn" : "ok"));
+  }
+
+  // --- Papildomas O2
+  pills.push(classifyPill(`Papildomas O₂: ${onO2 ? "taip" : "ne"}`, onO2 ? "warn" : "ok"));
+
+  // --- AVPU
+  pills.push(classifyPill(`AVPU: ${avpu}`, (avpu==='A') ? "ok" : "warn"));
 
   // --- SpO2
   if(spo2!=null){
@@ -938,11 +1060,11 @@ const avpu = (f['avpu']?.value || 'A');
     } else {
       pills.push(classifyPill(`SpO₂ ${spo2}%`, "ok"));
     }
-   // Jei taikomas papildomas O2 – traukiam planą kaip prie neefektyvios dujų apykaitos
-if(onO2){
-  esamos.push("Neefektyvi dujų apykaita");
-}
-   const news = calcNewsScore({ rr, spo2, onO2, temp, sys, hr, avpu });
+  }
+
+  // ✅ Jei taikomas papildomas O2 – traukiam planą kaip prie dujų apykaitos (net jei SpO2 normali)
+  if(onO2){
+    esamos.push("Neefektyvi dujų apykaita");
   }
 
   // --- Temperatūra
@@ -963,31 +1085,22 @@ if(onO2){
 
   // --- Tracheostoma / sekretas / siurbimas
   if(
-    f['trach'].value==='taip' ||
-    f['sekretas_trach'].value==='taip' ||
-    f['siurbimas'].value==='taip'
+    f['trach']?.value==='taip' ||
+    f['sekretas_trach']?.value==='taip' ||
+    f['siurbimas']?.value==='taip'
   ){
     esamos.push("Kvėpavimo takai su tracheostominiu vamzdžiu");
   }
 
- // --- Nosis / dusulys
-if (f['nosis'].value === 'tamponuota') {
-  // esama būklė
-  esamos.push("Tamponuota nosis");
+  // --- Nosis / dusulys
+  if (f['nosis']?.value === 'tamponuota') {
+    esamos.push("Tamponuota nosis");
+    galimos.push("Miego sutrikimai");
+  } else if (f['nosis']?.value === 'istraukti') {
+    esamos.push("Nedidelis kraujavimas iš nosies");
+  }
+  if(f['dusulys']?.value==='taip') esamos.push("Sutrikusi kvėpavimo funkcija (dusulys)");
 
-  // galimos pasekmės
-  galimos.push("Miego sutrikimai");
-}
-else if (f['nosis'].value === 'istraukti') {
-  // paliekam kaip buvo
-  esamos.push("Nedidelis kraujavimas iš nosies");
-}
-
-if (f['dusulys'].value === 'taip') {
-  esamos.push("Sutrikusi kvėpavimo funkcija (dusulys)");
-}
-
- 
   // --- AKS
   if(sys!=null && dia!=null){
     if(sys < THRESHOLDS.sysLow || (map!=null && map < THRESHOLDS.mapLow)) esamos.push("Pažemėjęs kraujo spaudimas");
@@ -1007,120 +1120,115 @@ if (f['dusulys'].value === 'taip') {
   }
 
   // --- Mityba
-  const m = f['mityba'].value;
+  const m = f['mityba']?.value;
   if(m==='peg') esamos.push("Mityba per PEG");
   else if(m==='zondas') esamos.push("Mityba per zondą (NG)");
   else if(m==='burna'){
-    if(f['rijimas'].value==='taip' || f['suvalgo'].value!=='taip') esamos.push("Sutrikusi mityba per burną");
+    if(f['rijimas']?.value==='taip' || f['suvalgo']?.value!=='taip') esamos.push("Sutrikusi mityba per burną");
   }
 
   // --- Šalinimas
-  if(f['kateteris'].value==='yra') esamos.push("Šlapimo kateteris");
-  if(f['viduriai'].value==='taip') esamos.push("Vidurių užkietėjimas");
-  if(f['viduriavimas'].value==='taip') esamos.push("Viduriavimas");
+  if(f['kateteris']?.value==='yra') esamos.push("Šlapimo kateteris");
+  if(f['viduriai']?.value==='taip') esamos.push("Vidurių užkietėjimas");
+  if(f['viduriavimas']?.value==='taip') esamos.push("Viduriavimas");
 
-  // --- Miegas
+  // --- Miegas (tavo taisyklė)
   if (f['miegas'] && f['miegas'].value === 'sutrikusi') {
     esamos.push("Sutrikęs miegas");
   }
 
-// --- Judėjimas / pragulos (NORIMA: esamos = "Gulimas režimas" + "Pragulos")
-const bedRest = (f['mobilumas'].value === 'lova');
-const hasPressureUlcer = (f['pragulos'].value === 'yra');
+  // --- Judėjimas + pragulos (esamos problemos atskirai)
+  const bedRest = (f['mobilumas']?.value === 'lova');
+  const hasPressureUlcer = (f['pragulos']?.value === 'yra');
 
-if (bedRest) {
-  esamos.push("Gulimas režimas");
-  // jei nori, kad kai lova ir pragulų nėra, liktų profilaktika:
-  if (!hasPressureUlcer) {
-    galimos.push("Rizika praguloms dėl lovos režimo");
+  if (bedRest) {
+    esamos.push("Gulimas režimas");
+    if (!hasPressureUlcer) {
+      galimos.push("Rizika praguloms dėl lovos režimo");
+    }
   }
-}
+  if (hasPressureUlcer) {
+    esamos.push("Pragulos");
+  }
 
-if (hasPressureUlcer) {
-  esamos.push("Pragulos");
-}
-
-  // --- Oda
-  if(f['pragulos'].value==='yra') esamos.push("Pragulos");
-  if(f['zaizdos'].value==='yra'){
-    const apr=(f['zaizdos_text'].value||'').trim();
+  // --- Oda / žaizdos
+  if(f['zaizdos']?.value==='yra'){
+    const apr=(f['zaizdos_text']?.value||'').trim();
     esamos.push("Odos vientisumo pažeidimas (žaizda)"+(apr?(" – "+apr):""));
   }
 
-// --- Skausmas
-if(f['skausmas'].value === 'taip'){
-  const val = toNum(f['skausmoLygis'].value);
+  // --- Skausmas (klinikinis formatas + techninis raktas planui)
+  if(f['skausmas']?.value==='taip'){
+    const val = toNum(f['skausmoLygis']?.value);
 
-  if(val == null || val < 0 || val > 10){
-    alert("Įveskite skausmo intensyvumą (0–10).");
-    $('skausmoLygis').focus();
-    return { error:true };
+    if(val==null || val<0 || val>10){
+      alert("Įveskite skausmo intensyvumą (0–10).");
+      $('skausmoLygis')?.focus();
+      return { error:true };
+    }
+
+    let painRangeKey = "";
+    let painText = "";
+
+    if(val>=1 && val<=3){ painRangeKey="Nedidelis skausmas (1–3/10)"; painText="nedidelis skausmas"; }
+    else if(val>=4 && val<=6){ painRangeKey="Vidutinis skausmas (4–6/10)"; painText="vidutinis skausmas"; }
+    else if(val>=7 && val<=10){ painRangeKey="Didelis skausmas (7–10/10)"; painText="didelis skausmas"; }
+    else { painRangeKey="Skausmas (0/10)"; painText="skausmo nėra"; }
+
+    // 1) ką mato slaugytoja
+    esamos.push(`${val}/10 (${painText})`);
+    // 2) kad planas prisikabintų
+    if(val>0) esamos.push(painRangeKey);
+
+    const sev = val>=7 ? "bad" : val>=4 ? "warn" : "ok";
+    pills.push(classifyPill(`Skausmas ${val}/10`, sev));
   }
 
-  let painRangeKey = "";
-  let painText = "";
+  // --- Kraujavimo rizika
+  if(f['kraujavimo_rizika']?.value==='yra') galimos.push("Kraujavimo rizika");
 
-  if(val >= 1 && val <= 3){
-    painRangeKey = "Nedidelis skausmas (1–3/10)";
-    painText = "nedidelis skausmas";
-  }
-  else if(val >= 4 && val <= 6){
-    painRangeKey = "Vidutinis skausmas (4–6/10)";
-    painText = "vidutinis skausmas";
-  }
-  else if(val >= 7 && val <= 10){
-    painRangeKey = "Didelis skausmas (7–10/10)";
-    painText = "didelis skausmas";
-  }
-  else{
-    painRangeKey = "Skausmas (0/10)";
-    painText = "skausmo nėra";
-  }
+  // --- NEWS skaičiavimas + tekstas rekomendacijoms
+  const news = calcNewsScore({ rr, spo2, onO2, temp, sys, hr, avpu });
+  const newsText = newsRecommendations(news.score, news.maxSingle, news.complete, news.missing);
 
-  // 1️⃣ Klinikinis tekstas – KĄ MATO SLAUGYTOJA
-  esamos.push(`${val}/10 (${painText})`);
-
-  // 2️⃣ Techninis raktas – KAD PLANAS „PRISIKABINTŲ“
-  if(val > 0){
-    esamos.push(painRangeKey);
+  // (nebūtina, bet gražu santraukoje)
+  if(news.complete){
+    const sev = news.score >= 7 ? "bad" : news.score >= 5 ? "warn" : (news.score >= 1 ? "warn" : "ok");
+    pills.push(classifyPill(`NEWS ${news.score}`, sev));
+  } else {
+    pills.push(classifyPill(`NEWS — (trūksta duomenų)`, "warn"));
   }
-
-  // pills (santrauka)
-  const sev = val >= 7 ? "bad" : val >= 4 ? "warn" : "ok";
-  pills.push(classifyPill(`Skausmas ${val}/10`, sev));
-}
-
-  // --- Kraujavimas
-  if(f['kraujavimo_rizika'].value==='yra') galimos.push("Kraujavimo rizika");
 
   return {
     error:false,
     esamos,
     galimos,
     pills,
-    vitals:{spo2,temp,sys,dia,hr,map},
-    highSys30
-   news,
-newsText: newsRecommendations(news.score, news.maxSingle),
+    vitals:{spo2,temp,sys,dia,hr,map,rr,onO2,avpu},
+    highSys30,
+    news,
+    newsText
   };
 }
 
 /* =========================================================
    6) OUTPUT / ĮRAŠAS / HTML  (EDIT HERE #4)
-   - pakeista: kai yra lovos režimas + pragulos,
-     plane rodomas tik "Gulimas režimas ir pragulos"
-     (be atskiro "Pragulos" plano dubliavimo)
+   - NEWS rodomas viename "Gyvybinių rodiklių" lange
+   - Kombinuotas planas "Gulimas režimas ir pragulos" (be dubliavimo)
 ========================================================= */
 let lastPayload = null;
 
 function renderOutput(f, ctx){
-  const { esamos, galimos, pills, vitals, highSys30 } = ctx;
-  const { spo2, temp, sys, dia, hr, map } = vitals;
+  const { esamos, galimos, pills, vitals, highSys30, news, newsText } = ctx;
+
+  const {
+    rr, spo2, temp, sys, dia, hr, map, onO2, avpu
+  } = vitals;
 
   const esamosU = uniq(esamos).sort();
   const galimosU = uniq(galimos).sort();
 
-  // ✅ Flag: kai lovos režimas + pragulos → vienas kombinuotas planas
+  // ✅ Flag: kai lovos režimas + pragulos → plane rodome tik kombinuotą planą
   const combineBedRestAndUlcers =
     (f['mobilumas']?.value === 'lova' && f['pragulos']?.value === 'yra');
 
@@ -1161,14 +1269,22 @@ function renderOutput(f, ctx){
 
   // HTML rezultatai
   let html="";
-  if(pills.length) html+=`<div class="hint"><strong>Greita santrauka:</strong> ${pills.join(" ")}</div>`;
 
-  html+=`<h3>Esamos problemos</h3><ul>${esamosU.length ? esamosU.map(p=>`<li>${escapeHtml(p)}</li>`).join("") : "<li>Nepastebėta</li>"}</ul>`;
-  html+=`<h3>Galimos problemos</h3><ul>${galimosU.length ? galimosU.map(p=>`<li>${escapeHtml(p)}</li>`).join("") : "<li>Nepastebėta</li>"}</ul>`;
+  if(pills.length){
+    html += `<div class="hint"><strong>Greita santrauka:</strong> ${pills.join(" ")}</div>`;
+  }
 
-  html+=`<h3>Slaugos planas</h3>`;
+  html += `<h3>Esamos problemos</h3><ul>${
+    esamosU.length ? esamosU.map(p=>`<li>${escapeHtml(p)}</li>`).join("") : "<li>Nepastebėta</li>"
+  }</ul>`;
 
-  // ✅ 1) Pirmiausia (jei reikia) – kombinuotas planas
+  html += `<h3>Galimos problemos</h3><ul>${
+    galimosU.length ? galimosU.map(p=>`<li>${escapeHtml(p)}</li>`).join("") : "<li>Nepastebėta</li>"
+  }</ul>`;
+
+  html += `<h3>Slaugos planas</h3>`;
+
+  // ✅ 1) Jei reikia – kombinuotas planas pirmas
   if (combineBedRestAndUlcers) {
     const key = "Gulimas režimas ir pragulos";
     const items = slaugosPlanas[key] || [];
@@ -1179,12 +1295,12 @@ function renderOutput(f, ctx){
     }
   }
 
-  // ✅ 2) Toliau – kiti planai, bet praleidžiam dubliuojančius
+  // ✅ 2) Likę planai, praleidžiant dubliuojančius
   [...esamosU, ...galimosU].forEach(p => {
     if (combineBedRestAndUlcers) {
       if (p === "Pragulos") return;
       if (p === "Rizika praguloms dėl lovos režimo") return;
-      // "Gulimas režimas" neturi atskiro plano (nebent vėliau pridėsi) – paliekam ramybėj
+      // "Gulimas režimas" – atskiro plano nerodom (nebent vėliau įdėsi į slaugosPlanas)
     }
 
     const key = Object.keys(slaugosPlanas).find(k => p.startsWith(k));
@@ -1192,71 +1308,92 @@ function renderOutput(f, ctx){
 
     const items = [...(slaugosPlanas[key] || [])];
 
+    // tavo taisyklė: SYS >165 → papildomas punktas
     if(p.startsWith("Padidėjęs kraujo spaudimas") && highSys30){
       items.push("AKS sekimas kas 30 min.");
     }
 
-    html += `<div class="planas"><h4>${escapeHtml(p)}</h4><ul>${items.map(i=>`<li>${escapeHtml(i)}</li>`).join("")}</ul></div>`;
+    html += `<div class="planas"><h4>${escapeHtml(p)}</h4><ul>${
+      items.map(i=>`<li>${escapeHtml(i)}</li>`).join("")
+    }</ul></div>`;
   });
 
   // Dietos planas
   const dietItems = (dietCode && dietCode!=='KITA') ? (dietPlan[dietCode]||[]) : [];
   if(dietItems.length){
-    html+=`<div class="planas"><h4>Dieta: ${escapeHtml(dietCode)}</h4><ul>${dietItems.map(i=>`<li>${escapeHtml(i)}</li>`).join("")}</ul></div>`;
+    html += `<div class="planas"><h4>Dieta: ${escapeHtml(dietCode)}</h4><ul>${
+      dietItems.map(i=>`<li>${escapeHtml(i)}</li>`).join("")
+    }</ul></div>`;
   }
 
   // Suvaržymas
   if(isRestrained){
-    html+=`<div class="planas"><h4>Fizinis suvaržymas</h4><ul>${restraintPlan.map(i=>`<li>${escapeHtml(i)}</li>`).join("")}</ul></div>`;
+    html += `<div class="planas"><h4>Fizinis suvaržymas</h4><ul>${
+      restraintPlan.map(i=>`<li>${escapeHtml(i)}</li>`).join("")
+    }</ul></div>`;
   }
 
   // Pirminio vertinimo papildomos intervencijos
   if(pvExtraItems.length){
     const extra = uniq(pvExtraItems);
-    html+=`<div class="planas"><h4>Pirminis vertinimas: papildomos intervencijos</h4><ul>${extra.map(i=>`<li>${escapeHtml(i)}</li>`).join("")}</ul></div>`;
+    html += `<div class="planas"><h4>Pirminis vertinimas: papildomos intervencijos</h4><ul>${
+      extra.map(i=>`<li>${escapeHtml(i)}</li>`).join("")
+    }</ul></div>`;
   }
 
-  const aksStr=(sys!=null&&dia!=null)?`${sys} / ${dia} mmHg${map!=null?` (MAP ${map})`:''}`:'-';
-  html+=`<h3>Įvesti gyvybiniai rodikliai</h3>
-  <p><strong>SpO₂:</strong> ${valOrDash(spo2)} %<br>
-  <strong>AKS:</strong> ${aksStr}<br>
-  <strong>ŠSD:</strong> ${valOrDash(hr)} / min<br>
-  <strong>Temperatūra:</strong> ${temp!=null?temp.toFixed(1):"-"} °C</p>
-  <p><strong>Pacientas:</strong> ${escapeHtml(psichoTekstas)}</p>`;
- // ===== NEWS (ankstyvojo perspėjimo skalė) =====
-const newsScore = ctx.news?.score;
-const newsReco  = ctx.newsText;
+  /* =========================
+     GYVYBINIAI RODIKLIAI – VIENAS LANGAS + NEWS
+  ========================= */
+  const aksStr = (sys!=null && dia!=null)
+    ? `${sys} / ${dia} mmHg${map!=null ? ` (MAP ${map})` : ''}`
+    : '-';
 
-html += `<p><strong>Ankstyvojo perspėjimo skalės (NEWS) balas:</strong> ${
-  newsScore != null ? newsScore : "— (trūksta duomenų)"
-}</p>`;
+  const rrStr   = (rr!=null) ? `${rr} / min` : '-';
+  const o2Str   = onO2 ? 'Taip' : 'Ne';
+  const avpuStr = avpu === 'A' ? 'A – budrus'
+               : avpu === 'V' ? 'V – reaguoja į balsą'
+               : avpu === 'P' ? 'P – reaguoja į skausmą'
+               : avpu === 'U' ? 'U – reakcijos nėra'
+               : '-';
 
-if (newsReco) {
-  html += `
+  const newsScoreStr = (news?.complete) ? String(news.score) : '—';
+
+  html += `<h3>Įvesti gyvybiniai rodikliai</h3>
+  <p>
+    <strong>SpO₂:</strong> ${valOrDash(spo2)} %<br>
+    <strong>RR:</strong> ${rrStr}<br>
+    <strong>Papildomas O₂:</strong> ${o2Str}<br>
+    <strong>AKS:</strong> ${aksStr}<br>
+    <strong>ŠSD:</strong> ${valOrDash(hr)} / min<br>
+    <strong>Temperatūra:</strong> ${temp!=null ? temp.toFixed(1) : "-"} °C<br>
+    <strong>AVPU:</strong> ${escapeHtml(avpuStr)}<br>
+    <strong>Ankstyvojo perspėjimo skalės (NEWS) balas:</strong> ${newsScoreStr}
+  </p>
+  <div class="hint">
+    Suvedus visus rodiklius sistema paskaičiuoja ankstyvojo perspėjimo skalės (NEWS) balą.
+  </div>
   <div class="planas">
     <h4>Rekomendacijos slaugytojai</h4>
-    <ul>
-      <li>${escapeHtml(newsReco)}</li>
-    </ul>
-  </div>`;
-}
+    <ul><li>${escapeHtml(newsText || "—")}</li></ul>
+  </div>
+  <p><strong>Pacientas:</strong> ${escapeHtml(psichoTekstas)}</p>`;
 
   if (restraintSentence) html += `<p>${escapeHtml(restraintSentence)}</p>`;
   if(hasDiet){
-    const dietaUi=(dietCode==='KITA')?dietCustom:dietCode;
-    html+=`<p><strong>Pacientui skirta:</strong> ${escapeHtml(dietaUi)} dieta</p>`;
+    const dietaUi=(dietCode==='KITA') ? dietCustom : dietCode;
+    html += `<p><strong>Pacientui skirta:</strong> ${escapeHtml(dietaUi)} dieta</p>`;
   }
-  html+=`<p><strong>Pirminis vertinimas:</strong> ${escapeHtml(pvSummaryText || "—")}</p>`;
+  html += `<p><strong>Pirminis vertinimas:</strong> ${escapeHtml(pvSummaryText || "—")}</p>`;
 
   $('results').innerHTML = html;
 
-  // =========================
-  // Bendras planas + įrašas (LIS) — be dubliavimo
-  // =========================
+  /* =========================
+     Bendras planas + įrašas (LIS) — be dubliavimo
+  ========================= */
   const seenPlan=new Set();
   const planItems=[];
 
-  // ✅ jei kombinuotas scenarijus – įdedam tik kombinuotą planą į planItems
+  // kombinuotas planas – į planItems įdedam tik jį (jei reikia)
   if (combineBedRestAndUlcers) {
     const key = "Gulimas režimas ir pragulos";
     (slaugosPlanas[key] || []).forEach(it => {
@@ -1284,29 +1421,43 @@ if (newsReco) {
   });
 
   if(dietCode && dietCode!=='KITA'){
-    (dietPlan[dietCode]||[]).forEach(it=>{ if(!seenPlan.has(it)){ seenPlan.add(it); planItems.push(it); } });
+    (dietPlan[dietCode]||[]).forEach(it=>{
+      if(!seenPlan.has(it)){ seenPlan.add(it); planItems.push(it); }
+    });
   }
+
   if(isRestrained){
-    restraintPlan.forEach(it=>{ if(!seenPlan.has(it)){ seenPlan.add(it); planItems.push(it); } });
+    restraintPlan.forEach(it=>{
+      if(!seenPlan.has(it)){ seenPlan.add(it); planItems.push(it); }
+    });
   }
+
   if(pvExtraItems.length){
-    uniq(pvExtraItems).forEach(it=>{ if(!seenPlan.has(it)){ seenPlan.add(it); planItems.push(it); } });
+    uniq(pvExtraItems).forEach(it=>{
+      if(!seenPlan.has(it)){ seenPlan.add(it); planItems.push(it); }
+    });
   }
 
   const planasText = planItems.length ? planItems.map(i=>"• "+i).join("\n") : "-";
-  const gyvybiniai = vitalsText(spo2,sys,dia,map,hr,temp);
+
+  const gyvybiniai = vitalsText(spo2, sys, dia, map, hr, temp, rr, onO2, avpu);
   const slaugosProb = esamosU.length ? esamosU.join('; ') : '-';
   const galimosProb = galimosU.length ? galimosU.join('; ') : '-';
 
   let irasas =
-    `Gyvybiniai rodikliai:\n${gyvybiniai}\n\n`+
+    `Gyvybiniai rodikliai:\n${gyvybiniai}\n`+
+    `NEWS: ${news?.complete ? news.score : "—"}\n`+
+    `Rekomendacija: ${newsText || "—"}\n\n`+
     `Pacientas: ${psichoTekstas}\n`;
+
   if (restraintSentence) irasas += `${restraintSentence}\n`;
   irasas += `\n`;
+
   if(hasDiet){
-    const dietaNote=(dietCode==='KITA')?dietCustom:dietCode;
+    const dietaNote=(dietCode==='KITA') ? dietCustom : dietCode;
     irasas += `Pacientui skirta: ${dietaNote} dieta\n\n`;
   }
+
   irasas +=
     `Pirminis vertinimas:\n${pvSummaryText || "—"}\n\n`+
     `Slaugos problemos:\n${slaugosProb}\n\n`+
@@ -1315,12 +1466,15 @@ if (newsReco) {
 
   lastPayload={
     "Laikas": new Date().toLocaleString('lt-LT'),
-    "palata": (f['palata'].value||"").trim(),
-    "lova":   (f['lova'].value||"").trim(),
+    "palata": (f['palata']?.value||"").trim(),
+    "lova":   (f['lova']?.value||"").trim(),
     "įrašas": irasas
   };
 
-  $('results').insertAdjacentHTML('beforeend', `<div class="mono">${escapeHtml(JSON.stringify(lastPayload,null,2))}</div>`);
+  $('results').insertAdjacentHTML(
+    'beforeend',
+    `<div class="mono">${escapeHtml(JSON.stringify(lastPayload,null,2))}</div>`
+  );
 }
 
 
@@ -1377,6 +1531,7 @@ function resetForm(){
 
 </body>
 </html>
+
 
 
 
