@@ -671,6 +671,17 @@ const slaugosPlanas = {
     "Skysčių/aktyvumo skatinimas pagal būklę",
     "Priemonių taikymas pagal paskyrimą"
   ],
+   "Tachikardija": [
+    "Pulsas sekamas kas 4 val.",
+    "Įvertinti galimas priežastis (skausmas, karščiavimas, hipovolemija, hipoksija, nerimas)",
+    "AKS ir SpO₂ stebėjimas",
+    "Jei pulsas >120/min ar yra simptomai (hipotenzija, galvos svaigimas, krūtinės skausmas) – informuoti gydytoją"
+  ],
+  "Bradikardija": [
+    "Pulsas sekamas kas 4 val.",
+    "AKS, sąmonės būklės ir perfuzijos stebėjimas",
+    "Jei yra simptomai arba AKS žemas – informuoti gydytoją"
+  ],
   "Viduriavimas": [
     "Stebėti tuštinimąsi",
     "Odos priežiūra tarpvietėje",
@@ -844,6 +855,19 @@ function detectProblems(f){
     }
   }
 
+  // --- Pulsas (VIENAS blokas)
+  if (hr != null) {
+    if (hr > THRESHOLDS.hrTachy) {
+      esamos.push("Tachikardija");
+      pills.push(classifyPill(`Pulsas ${hr}/min (tachikardija)`, "warn"));
+    } else if (hr < THRESHOLDS.hrBrady) {
+      esamos.push("Bradikardija");
+      pills.push(classifyPill(`Pulsas ${hr}/min (bradikardija)`, "warn"));
+    } else {
+      pills.push(classifyPill(`Pulsas ${hr}/min`, "ok"));
+    }
+  }
+
   // --- Tracheostoma / sekretas / siurbimas
   if(
     f['trach'].value==='taip' ||
@@ -853,41 +877,26 @@ function detectProblems(f){
     esamos.push("Kvėpavimo takai su tracheostominiu vamzdžiu");
   }
 
- // --- Nosis / dusulys
-if (f['nosis'].value === 'tamponuota') {
-  // esama būklė
-  esamos.push("Tamponuota nosis");
+  // --- Nosis / dusulys
+  if (f['nosis'].value === 'tamponuota') {
+    esamos.push("Tamponuota nosis");
+    galimos.push("Miego sutrikimai");
+  } else if (f['nosis'].value === 'istraukti') {
+    esamos.push("Nedidelis kraujavimas iš nosies");
+  }
+  if (f['dusulys'].value === 'taip') {
+    esamos.push("Sutrikusi kvėpavimo funkcija (dusulys)");
+  }
 
-  // galimos pasekmės
-  galimos.push("Miego sutrikimai");
-}
-else if (f['nosis'].value === 'istraukti') {
-  // paliekam kaip buvo
-  esamos.push("Nedidelis kraujavimas iš nosies");
-}
-
-if (f['dusulys'].value === 'taip') {
-  esamos.push("Sutrikusi kvėpavimo funkcija (dusulys)");
-}
-
- 
   // --- AKS
   if(sys!=null && dia!=null){
     if(sys < THRESHOLDS.sysLow || (map!=null && map < THRESHOLDS.mapLow)) esamos.push("Pažemėjęs kraujo spaudimas");
     if(sys >= THRESHOLDS.sysHigh || dia >= THRESHOLDS.diaHigh) esamos.push("Padidėjęs kraujo spaudimas");
   }
-
-  // --- pills santrauka apie AKS/MAP
+  // AKS/MAP „pills“
   if(map!=null) pills.push(classifyPill(`MAP ${map} mmHg`, (map < THRESHOLDS.mapLow) ? "bad" : (map < (THRESHOLDS.mapLow+10)) ? "warn" : "ok"));
   if(sys!=null && dia!=null) pills.push(classifyPill(`AKS ${sys}/${dia} mmHg`, (sys>=THRESHOLDS.sysHigh || dia>=THRESHOLDS.diaHigh) ? "warn" : (sys<THRESHOLDS.sysLow) ? "warn" : "ok"));
   if(highSys30) pills.push(classifyPill(`SYS ${sys} mmHg (>165) – kas 30 min.`, "warn"));
-
-  // --- Pulsas
-  if(hr!=null){
-    if(hr > THRESHOLDS.hrTachy) pills.push(classifyPill(`Pulsas ${hr}/min (tachikardija)`, "warn"));
-    else if(hr < THRESHOLDS.hrBrady) pills.push(classifyPill(`Pulsas ${hr}/min (bradikardija)`, "warn"));
-    else pills.push(classifyPill(`Pulsas ${hr}/min`, "ok"));
-  }
 
   // --- Mityba
   const m = f['mityba'].value;
@@ -907,73 +916,45 @@ if (f['dusulys'].value === 'taip') {
     esamos.push("Sutrikęs miegas");
   }
 
-// --- Judėjimas / pragulos (NORIMA: esamos = "Gulimas režimas" + "Pragulos")
-const bedRest = (f['mobilumas'].value === 'lova');
-const hasPressureUlcer = (f['pragulos'].value === 'yra');
-
-if (bedRest) {
-  esamos.push("Gulimas režimas");
-  // jei nori, kad kai lova ir pragulų nėra, liktų profilaktika:
-  if (!hasPressureUlcer) {
-    galimos.push("Rizika praguloms dėl lovos režimo");
+  // --- Judėjimas / pragulos (kombinuotas scenarijus apdoros render fazė)
+  const bedRest = (f['mobilumas'].value === 'lova');
+  const hasPressureUlcer = (f['pragulos'].value === 'yra');
+  if (bedRest) {
+    esamos.push("Gulimas režimas");
+    if (!hasPressureUlcer) galimos.push("Rizika praguloms dėl lovos režimo");
   }
-}
+  if (hasPressureUlcer) {
+    esamos.push("Pragulos");
+  }
 
-if (hasPressureUlcer) {
-  esamos.push("Pragulos");
-}
-
-  // --- Oda
-  if(f['pragulos'].value==='yra') esamos.push("Pragulos");
+  // --- Oda (žaizda)
   if(f['zaizdos'].value==='yra'){
     const apr=(f['zaizdos_text'].value||'').trim();
     esamos.push("Odos vientisumo pažeidimas (žaizda)"+(apr?(" – "+apr):""));
   }
 
-// --- Skausmas
-if(f['skausmas'].value === 'taip'){
-  const val = toNum(f['skausmoLygis'].value);
+  // --- Skausmas (intervalas + konkretus balas)
+  if(f['skausmas'].value === 'taip'){
+    const val = toNum(f['skausmoLygis'].value);
+    if(val == null || val < 0 || val > 10){
+      alert("Įveskite skausmo intensyvumą (0–10).");
+      $('skausmoLygis').focus();
+      return { error:true };
+    }
+    let painRangeKey = "", painText = "";
+    if(val >= 1 && val <= 3){ painRangeKey="Nedidelis skausmas (1–3/10)"; painText="nedidelis skausmas"; }
+    else if(val >= 4 && val <= 6){ painRangeKey="Vidutinis skausmas (4–6/10)"; painText="vidutinis skausmas"; }
+    else if(val >= 7 && val <= 10){ painRangeKey="Didelis skausmas (7–10/10)"; painText="didelis skausmas"; }
+    else { painRangeKey="Skausmas (0/10)"; painText="skausmo nėra"; }
 
-  if(val == null || val < 0 || val > 10){
-    alert("Įveskite skausmo intensyvumą (0–10).");
-    $('skausmoLygis').focus();
-    return { error:true };
+    esamos.push(`${val}/10 (${painText})`);
+    if(val > 0) esamos.push(painRangeKey);
+
+    const sev = val >= 7 ? "bad" : val >= 4 ? "warn" : "ok";
+    pills.push(classifyPill(`Skausmas ${val}/10`, sev));
   }
 
-  let painRangeKey = "";
-  let painText = "";
-
-  if(val >= 1 && val <= 3){
-    painRangeKey = "Nedidelis skausmas (1–3/10)";
-    painText = "nedidelis skausmas";
-  }
-  else if(val >= 4 && val <= 6){
-    painRangeKey = "Vidutinis skausmas (4–6/10)";
-    painText = "vidutinis skausmas";
-  }
-  else if(val >= 7 && val <= 10){
-    painRangeKey = "Didelis skausmas (7–10/10)";
-    painText = "didelis skausmas";
-  }
-  else{
-    painRangeKey = "Skausmas (0/10)";
-    painText = "skausmo nėra";
-  }
-
-  // 1️⃣ Klinikinis tekstas – KĄ MATO SLAUGYTOJA
-  esamos.push(`${val}/10 (${painText})`);
-
-  // 2️⃣ Techninis raktas – KAD PLANAS „PRISIKABINTŲ“
-  if(val > 0){
-    esamos.push(painRangeKey);
-  }
-
-  // pills (santrauka)
-  const sev = val >= 7 ? "bad" : val >= 4 ? "warn" : "ok";
-  pills.push(classifyPill(`Skausmas ${val}/10`, sev));
-}
-
-  // --- Kraujavimas
+  // --- Kraujavimo rizika
   if(f['kraujavimo_rizika'].value==='yra') galimos.push("Kraujavimo rizika");
 
   return {
@@ -985,6 +966,7 @@ if(f['skausmas'].value === 'taip'){
     highSys30
   };
 }
+
 
 /* =========================================================
    6) OUTPUT / ĮRAŠAS / HTML  (EDIT HERE #4)
@@ -1241,5 +1223,3 @@ function resetForm(){
 
 </body>
 </html>
-
-
