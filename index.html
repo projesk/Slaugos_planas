@@ -28,8 +28,7 @@
   @media(max-width:680px){.row{grid-template-columns:1fr}}
 
   select{
-    -webkit-appearance:none;
-    appearance:none;
+    -webkit-appearance:none;appearance:none;
     background-image:
       linear-gradient(45deg, transparent 50%, #6b7280 50%),
       linear-gradient(135deg, #6b7280 50%, transparent 50%),
@@ -449,11 +448,10 @@
 <script>
 /* =========================================================
    SLAUGOS PLANAS — TVARKINGAI SUSKALDYTAS KODAS
-   Kaip taisyti ateityje:
-   - EDIT HERE #1: THRESHOLDS / ribos
-   - EDIT HERE #2: slaugosPlanas / dietPlan / restraintPlan (tekstas)
-   - EDIT HERE #3: detectProblems() (kada kuri problema atsiranda)
-   - EDIT HERE #4: renderOutput() (kaip rodomas planas/įrašas)
+   – EDIT HERE #1: ribos (THRESHOLDS)
+   – EDIT HERE #2: planų tekstai (slaugosPlanas / dietPlan / restraintPlan)
+   – EDIT HERE #3: detectProblems() (kada kuri problema atsiranda)
+   – EDIT HERE #4: renderOutput() (kaip rodomas planas/įrašas)
 ========================================================= */
 
 /* =========================================================
@@ -469,7 +467,7 @@ function classifyPill(text, severity="ok"){ const cls=severity==="bad"?"pill bad
 function uniq(arr){ return [...new Set(arr)].filter(Boolean); }
 function vitalsText(spo2, sys, dia, map, hr, temp){
   const aks=(sys!=null&&dia!=null)?`${sys}/${dia} mmHg${map!=null?` (MAP ${map})`:""}`:"-";
-  const t=(temp!=null)?`${temp.toFixed(1)} °C`:"-";
+  const t=(temp!=null)?`${Number(temp).toFixed(1)} °C`:"-";
   const s=(spo2!=null)?`${spo2} %`:"-";
   const h=(hr!=null)?`${hr}/min`:"-";
   return `SpO₂: ${s}, AKS: ${aks}, ŠSD: ${h}, T: ${t}`;
@@ -488,15 +486,16 @@ const THRESHOLDS = {
 };
 
 /* =========================================================
-   2) DATA / ŽEMĖLAPIAI  (EDIT HERE #2)
+   2) DATA / PLANAI  (EDIT HERE #2)
 ========================================================= */
 const slaugosPlanas = {
+  /* Kvėpavimas */
   "Kvėpavimo takai su tracheostominiu vamzdžiu": [
     "Savalaikis atsiurbimas iš tracheostominio vamzdelio",
     "Vamzdelio drėkinimas",
     "Palatos oro drėkinimas",
     "Sekreto (kiekio/spalvos/klampumo) vertinimas ir dokumentavimas",
-    "Stomos priežiūra – tvarsčio keitimas bent 2 kartus per parą",
+    "Stomos priežiūra – tvarsčio keitimas bent 2 k./parą",
     "Tracheostominio vamzdelio fiksacijos patikra"
   ],
   "Nedidelis kraujavimas iš nosies": [
@@ -504,13 +503,31 @@ const slaugosPlanas = {
     "Pacientas apmokintas kaip prižiūrėti nosį kraujavimui sustojus"
   ],
   "Tamponuota nosis": ["Nosies tvarščio keitimas"],
-
   "Sutrikusi kvėpavimo funkcija (dusulys)": ["SpO₂ stebėjimas","Prireikus O₂ skyrimas pagal SpO₂"],
   "Neefektyvi dujų apykaita": ["SpO₂ stebėjimas","O₂ skyrimas ir reguliavimas pagal SpO₂ duomenis"],
-  "Pažemėjęs kraujo spaudimas": ["Patarta neskubėti keltis, pasėdėti nuleidus kojas prieš einant","Stebėjimas dėl galimų griuvimų","AKS matavimas po 1 val."],
-  "Padidėjęs kraujo spaudimas": ["AKS sekimas kas 4 val."],
 
-  "Sutrikusi mityba per burną": ["Stebėjimas dėl aspiracijos","Pagalba valgant","Reikalui esant maisto tirštinimas"],
+  /* Širdies-kraujotaka */
+  "Pažemėjęs kraujo spaudimas": [
+    "Patarta neskubėti keltis, pasėdėti nuleidus kojas prieš einant",
+    "Stebėjimas dėl galimų griuvimų",
+    "AKS matavimas po 1 val."
+  ],
+  "Padidėjęs kraujo spaudimas": [
+    "AKS sekimas kas 4 val."
+  ],
+  "Tachikardija": [
+    "Pulsas sekamas kas 4 val.",
+    "Įvertinti galimas priežastis (skausmas, karščiavimas, hipovolemija, hipoksija, nerimas)",
+    "AKS ir SpO₂ stebėjimas",
+    "Jei pulsas >120/min ar yra simptomai – informuoti gydytoją"
+  ],
+  "Bradikardija": [
+    "Pulsas sekamas kas 4 val.",
+    "AKS, sąmonės būklės ir perfuzijos stebėjimas",
+    "Jei yra simptomai arba AKS žemas – informuoti gydytoją"
+  ],
+
+  /* Mityba – būdas */
   "Mityba per zondą (NG)": [
     "Zondo padėties patikra pagal įstaigos protokolą",
     "Galvūgalis ≥30–45° maitinimo metu ir 30–60 min po",
@@ -525,32 +542,34 @@ const slaugosPlanas = {
     "Stebėti dėl aspiracijos, pykinimo, pilvo pūtimo"
   ],
 
-  "Rizika praguloms dėl lovos režimo": ["Odos būklės stebėjimas","Pozicionavimas pagal būklę","Pragulų profilaktika"],
-  "Rizika griuvimui dėl pagalbos poreikio": ["Stebėjimas dėl galimų griuvimų","Pagalba judant"],
-  "Pragulos": ["Odos būklės stebėjimas","Pozicionavimas pagal būklę kas 2 - 3 valandas","Pagalbinės priemonės pozicionavimui","Pragulos perrišimas pagal žaizdų priežiūros planą"],
+  /* Mityba – turinys/rijimas */
+  "Rijimo sutrikimas / aspiracijos rizika": [
+    "Stebėjimas dėl aspiracijos",
+    "Pagalba valgant",
+    "Maisto tirštinimas prireikus pagal gydytojo paskyrimą"
+  ],
+  "Sumažėjęs suvartojamo maisto kiekis": [
+    "Įvertinti ir dokumentuoti valgymo metu suvartotą maisto kiekį",
+    "Pasiūlyti užkandžius tarp valgymų; pagal paskyrimą — papildai / gėrimai su kalorijomis",
+    "Įvertinti pykinimą/skausmą prieš valgį; taikyti priemones pagal paskyrimą (antiemetikai, nuskausminimas)",
+    "Prieš valgį patogi padėtis; pagalba maitinantis",
+    "Informuoti gydytoją, jei suvalgo <50–75 % kelių valgymų metu iš eilės",
+    "Stebėti skysčių balansą ir (jei taikoma) kūno masę periodiškai"
+  ],
 
+  /* Oda / pragulos / žaizdos */
+  "Rizika praguloms dėl lovos režimo": [
+    "Odos būklės stebėjimas",
+    "Pozicionavimas pagal būklę",
+    "Pragulų profilaktika"
+  ],
+  "Pragulos": [
+    "Odos būklės stebėjimas",
+    "Pozicionavimas pagal būklę kas 2 - 3 valandas",
+    "Pagalbinės priemonės pozicionavimui",
+    "Pragulos perrišimas pagal žaizdų priežiūros planą"
+  ],
   "Odos vientisumo pažeidimas (žaizda)": ["Žaizdos perrišimas","Stebėti infekcijos požymius"],
-
-  "Nedidelis skausmas (1–3/10)": ["Nefarmakologinis skausmo malšinimas","Pacientui norint – farmakologinis nuskausminimas"],
-  "Vidutinis skausmas (4–6/10)": ["Savalaikis nuskausminimas pagal gydytojo paskyrimą","Pakartotinis skausmo matavimas po 30 min. po vaistų suleidimo/sudavimo"],
-  "Didelis skausmas (7–10/10)": ["Skubus nuskausminimas pagal gydytojo paskyrimą","Pakartotinis skausmo matavimas po 15 min."],
-
-  "Šlapimo kateteris": ["Kateterio priežiūra pagal įstaigos protokolą","Stebėti diurezę ir šlapimo pobūdį","Stebėti infekcijos požymius"],
-  "Vidurių užkietėjimas": ["Stebėti tuštinimąsi","Skysčių/aktyvumo skatinimas pagal būklę","Priemonių taikymas pagal paskyrimą"],
-  "Viduriavimas": ["Stebėti tuštinimąsi","Odos priežiūra tarpvietėje","Skysčių balanso stebėjimas"],
-
-  "Tachikardija": [
-    "Pulsas sekamas kas 4 val.",
-    "Įvertinti galimas priežastis (skausmas, karščiavimas, hipovolemija, hipoksija, nerimas)",
-    "AKS ir SpO₂ stebėjimas",
-    "Jei pulsas >120/min ar yra simptomai (hipotenzija, galvos svaigimas, krūtinės skausmas) – informuoti gydytoją"
-  ],
-  "Bradikardija": [
-    "Pulsas sekamas kas 4 val.",
-    "AKS, sąmonės būklės ir perfuzijos stebėjimas",
-    "Jei yra simptomai arba AKS žemas – informuoti gydytoją"
-  ],
-
   "Gulimas režimas ir pragulos": [
     "Odos būklės stebėjimas",
     "Pozicionavimas pagal būklę kas 2–3 valandas",
@@ -559,6 +578,7 @@ const slaugosPlanas = {
     "Naujų pragulų atsiradimo profilaktika"
   ],
 
+  /* Miegas, temperatūra */
   "Sutrikęs miegas": [
     "Miego ir poilsio režimo vertinimas",
     "Aplinkos veiksnių korekcija (triukšmas, šviesa, temperatūra)",
@@ -566,19 +586,53 @@ const slaugosPlanas = {
     "Nefarmakologinių miego gerinimo priemonių taikymas",
     "Paciento savijautos stebėjimas ryte"
   ],
-
   "Padidėjusi temperatūra": ["Temperatūros stebėjimas"],
   "Hipotermija": ["Šilumos palaikymas","Temperatūros stebėjimas"],
-  "Kraujavimo rizika": ["Stebėjimas dėl galimo kraujavimo","AKS sekimas"]
+
+  /* Šalinimas */
+  "Šlapimo kateteris": [
+    "Palaikomas uždaras drenavimo sistemos vientisumas.",
+    "Šlapimo maišas visada žemiau šlapimo pūslės lygio; pakabintas prie paciento lovos.",
+    "Diurezės apskaita (ml/val., ml/24 h) ir šlapimo pobūdžio vertinimas.",
+    "Infekcijos profilaktika: stebėti T°, infekcijos požymius, pokyčius šlapimo spalvoje, drumzlėtume.",
+    "Paciento mokymas: tinkamas maišo ištuštinimas ir sistemos apsauga nuo tempimo."
+  ],
+  "Vidurių užkietėjimas": ["Stebėti tuštinimąsi","Skysčių/aktyvumo skatinimas pagal būklę","Priemonių taikymas pagal paskyrimą"],
+  "Viduriavimas": ["Stebėti tuštinimąsi","Odos priežiūra tarpvietėje","Skysčių balanso stebėjimas"],
+
+  /* Skausmas (intervalų planas) */
+  "Nedidelis skausmas (1–3/10)": ["Nefarmakologinis skausmo malšinimas","Pacientui norint – farmakologinis nuskausminimas"],
+  "Vidutinis skausmas (4–6/10)": ["Savalaikis nuskausminimas pagal gydytojo paskyrimą","Pakartotinis skausmo matavimas po 30 min. po vaistų suleidimo/sudavimo"],
+  "Didelis skausmas (7–10/10)": ["Skubus nuskausminimas pagal gydytojo paskyrimą","Pakartotinis skausmo matavimas po 15 min."],
+
+  /* Rizikos */
+  "Kraujavimo rizika": ["Stebėjimas dėl galimo kraujavimo","AKS sekimas"],
+  "Rizika griuvimui dėl pagalbos poreikio": [
+    "Griuvimų rizikos įvertinimas; žymėjimas",
+    "Aplinka be kliūčių, naktinis apšvietimas",
+    "Skambutis pasiekiamas; pacientas instruktuojamas kviesti pagalbą",
+    "WC palyda, pagalbinės priemonės",
+    "Lovos/vežimėlio stabdžiai užfiksuoti prieš persodinant",
+    "Reguliari stebėsena ir dokumentavimas"
+  ],
+
+  /* Judėjimas – esama */
+  "Judėjimas su pagalba": [
+    "Nustatomas individualus pagalbos lygis (1–2 asmenys, vaikštynė/ramentai).",
+    "Kėlimasis lėtai – ortostatinės hipotenzijos profilaktika.",
+    "Saugi aplinka: lova nuleista, stabdžiai užfiksuoti, skambutis pasiekiamas.",
+    "Patarta dėvėti neslystančias kojines / tinkamą avalynę.",
+    "Pirmo atsistojimo/persikėlimo metu – slaugytojo priežiūra."
+  ]
 };
 
 const dietPlan = {
   "P1": [], "P4": [],
-  "PTM":   ["Stebima, kaip pacientui pavyksta nuryti maistą, bei dėl aspiracijos rizikos."],
-  "TM":    ["Stebima, kaip pacientui pavyksta nuryti maistą, bei dėl aspiracijos rizikos."],
+  "PTM":   ["Stebima, kaip pavyksta nuryti maistą, bei dėl aspiracijos rizikos."],
+  "TM":    ["Stebima, kaip pavyksta nuryti maistą, bei dėl aspiracijos rizikos."],
   "SM":    ["Pacientas maitinamas mažais boliusais, lėtai; stebima dėl aspiracijos rizikos."],
   "CD":    ["Sekama glikemija."],
-  "PTM-CD":["Stebima, kaip pacientui pavyksta nuryti maistą, bei dėl aspiracijos rizikos; sekama glikemija."],
+  "PTM-CD":["Stebima, kaip pavyksta nuryti maistą, bei dėl aspiracijos rizikos; sekama glikemija."],
   "Na":    ["Stebima dėl edemų, pastebėjus – AKS ir skysčių sekimas."],
   "Sk(padid.)": ["Stebima dėl pilvo pūtimo ir tuštinimosi."],
   "Sk(maž.)":   ["Stebima dėl pilvo pūtimo ir tuštinimosi."],
@@ -654,9 +708,6 @@ onReady(() => {
 
 /* =========================================================
    5) ATPAŽINIMAS (EDIT HERE #3)
-   – Skausmas: esamose problemose tik "Skausmas N/10".
-   – Plano intervencijos parenkamos pagal intervalą, bet be
-     "(1–3/4–6/7–10/10)" dubliavimo problemų sąraše.
 ========================================================= */
 function detectProblems(f){
   const esamos=[], galimos=[], pills=[];
@@ -677,6 +728,7 @@ function detectProblems(f){
 
   // Temperatūra
   if(temp!=null){
+    if(temp>=THRESHOLDS.tempFever){ esamos.push("Padidėjęs kraujavimas?"); /* paliekam tavo temp logiką */ }
     if(temp>=THRESHOLDS.tempFever){ esamos.push("Padidėjusi temperatūra"); pills.push(classifyPill(`T ${temp.toFixed(1)}°C (karščiavimas)`,"warn")); }
     else if(temp>=THRESHOLDS.tempSubfebrile){ esamos.push("Padidėjusi temperatūra"); pills.push(classifyPill(`T ${temp.toFixed(1)}°C (subfebrilus)`,"warn")); }
     else if(temp<THRESHOLDS.tempHypothermia){ esamos.push("Hipotermija"); pills.push(classifyPill(`T ${temp.toFixed(1)}°C (žema)`,"warn")); }
@@ -707,12 +759,21 @@ function detectProblems(f){
   if(sys!=null&&dia!=null) pills.push(classifyPill(`AKS ${sys}/${dia} mmHg`, (sys>=THRESHOLDS.sysHigh||dia>=THRESHOLDS.diaHigh)?"warn":(sys<THRESHOLDS.sysLow)?"warn":"ok"));
   if(highSys30) pills.push(classifyPill(`SYS ${sys} mmHg (>165) – kas 30 min.`,"warn"));
 
-  // Mityba
+  // Mityba (atnaujinta)
   const m=f['mityba'].value;
-  if(m==='peg') esamos.push("Mityba per PEG");
-  else if(m==='zondas') esamos.push("Mityba per zondą (NG)");
-  else if(m==='burna'){
-    if(f['rijimas'].value==='taip' || f['suvalgo'].value!=='taip') esamos.push("Sutrikusi mityba per burną");
+  const rij=f['rijimas'].value;      // "taip"/"ne"
+  const suvalgo=f['suvalgo'].value;  // "taip"/"ne"
+
+  if(m==='burna'){
+    if(rij==='taip'){
+      esamos.push("Rijimo sutrikimas / aspiracijos rizika");
+    } else if(suvalgo!=='taip'){
+      esamos.push("Sumažėjęs suvartojamo maisto kiekis");
+    }
+  } else if(m==='zondas'){
+    esamos.push("Mityba per zondą (NG)");
+  } else if(m==='peg'){
+    esamos.push("Mityba per PEG");
   }
 
   // Šalinimas
@@ -725,14 +786,21 @@ function detectProblems(f){
 
   // Lovos režimas / pragulos
   const bedRest=(f['mobilumas'].value==='lova');
+  const needHelp=(f['mobilumas'].value==='pagalba');
   const hasPressureUlcer=(f['pragulos'].value==='yra');
-  if(bedRest){ esamos.push("Gulimas režimas"); if(!hasPressureUlcer) galimos.push("Rizika praguloms dėl lovos režimo"); }
-  if(hasPressureUlcer){ esamos.push("Pragulos"); }
+
+  if(needHelp){
+    esamos.push("Judėjimas su pagalba");
+    galimos.push("Rizika griuvimui dėl pagalbos poreikio");
+  } else if(bedRest){
+    galimos.push("Rizika praguloms dėl lovos režimo");
+  }
+  if(hasPressureUlcer) esamos.push("Pragulos");
 
   // Oda (žaizda)
   if(f['zaizdos'].value==='yra'){ const apr=(f['zaizdos_text'].value||'').trim(); esamos.push("Odos vientisumo pažeidimas (žaizda)"+(apr?(" – "+apr):"")); }
 
-  // Skausmas – tik „Skausmas N/10“ + grąžinam intervalą planui
+  // Skausmas – esamose problemose tik „Skausmas N/10“
   let painBlock=null;
   if(f['skausmas'].value==='taip'){
     const val=toNum(f['skausmoLygis'].value);
@@ -858,7 +926,7 @@ function renderOutput(f, ctx){
   <p><strong>SpO₂:</strong> ${valOrDash(spo2)} %<br>
   <strong>AKS:</strong> ${aksStr}<br>
   <strong>ŠSD:</strong> ${valOrDash(hr)} / min<br>
-  <strong>Temperatūra:</strong> ${temp!=null?temp.toFixed(1):"-"} °C</p>
+  <strong>Temperatūra:</strong> ${temp!=null?Number(temp).toFixed(1):"-"} °C</p>
   <p><strong>Pacientas:</strong> ${escapeHtml(psichoTekstas)}</p>`;
   if(restraintSentence) html+=`<p>${escapeHtml(restraintSentence)}</p>`;
   if(hasDiet){
@@ -868,7 +936,7 @@ function renderOutput(f, ctx){
   html+=`<p><strong>Pirminis vertinimas:</strong> ${escapeHtml(pvSummaryText || "—")}</p>`;
   $('results').innerHTML=html;
 
-  // ——— ĮRAŠAS LIS / Sheets
+  /* ——— ĮRAŠAS LIS/Sheets (viena eilutė, 4 stulpeliai) ——— */
   const seenPlan=new Set(); const planItems=[];
 
   if(combineBedRestAndUlcers){
@@ -963,4 +1031,3 @@ function resetForm(){
 
 </body>
 </html>
-
