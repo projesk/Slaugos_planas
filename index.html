@@ -275,6 +275,14 @@
           <option value="lova">Lovos režimas</option>
         </select>
       </label>
+
+      <!-- NAUJA: galvos svaigimas -->
+      <label for="galvos_svaigimas">Galvos svaigimas?
+        <select id="galvos_svaigimas" name="galvos_svaigimas">
+          <option value="ne">Ne</option>
+          <option value="taip">Taip</option>
+        </select>
+      </label>
     </div>
 
     <!-- MIEGAS -->
@@ -623,6 +631,17 @@ const slaugosPlanas = {
     "Saugi aplinka: lova nuleista, stabdžiai užfiksuoti, skambutis pasiekiamas.",
     "Patarta dėvėti neslystančias kojines / tinkamą avalynę.",
     "Pirmo atsistojimo/persikėlimo metu – slaugytojo priežiūra."
+  ],
+
+  /* NAUJA: Griuvimų rizika dėl galvos svaigimo (kai NĖRA „su pagalba“) */
+  "Rizika griuvimui dėl galvos svaigimo": [
+    "AKS sekimas",
+    "Griuvimų rizikos įvertinimas; žymėjimas",
+    "Aplinka be kliūčių, naktinis apšvietimas",
+    "Skambutis pasiekiamas; pacientas instruktuojamas kviesti pagalbą",
+    "WC palyda, pagalbinės priemonės",
+    "Lovos/vežimėlio stabdžiai užfiksuoti prieš persodinant",
+    "Reguliari stebėsena ir dokumentavimas"
   ]
 };
 
@@ -728,7 +747,6 @@ function detectProblems(f){
 
   // Temperatūra
   if(temp!=null){
-    if(temp>=THRESHOLDS.tempFever){ esamos.push("Padidėjęs kraujavimas?"); /* paliekam tavo temp logiką */ }
     if(temp>=THRESHOLDS.tempFever){ esamos.push("Padidėjusi temperatūra"); pills.push(classifyPill(`T ${temp.toFixed(1)}°C (karščiavimas)`,"warn")); }
     else if(temp>=THRESHOLDS.tempSubfebrile){ esamos.push("Padidėjusi temperatūra"); pills.push(classifyPill(`T ${temp.toFixed(1)}°C (subfebrilus)`,"warn")); }
     else if(temp<THRESHOLDS.tempHypothermia){ esamos.push("Hipotermija"); pills.push(classifyPill(`T ${temp.toFixed(1)}°C (žema)`,"warn")); }
@@ -759,7 +777,7 @@ function detectProblems(f){
   if(sys!=null&&dia!=null) pills.push(classifyPill(`AKS ${sys}/${dia} mmHg`, (sys>=THRESHOLDS.sysHigh||dia>=THRESHOLDS.diaHigh)?"warn":(sys<THRESHOLDS.sysLow)?"warn":"ok"));
   if(highSys30) pills.push(classifyPill(`SYS ${sys} mmHg (>165) – kas 30 min.`,"warn"));
 
-  // Mityba (atnaujinta)
+  // Mityba
   const m=f['mityba'].value;
   const rij=f['rijimas'].value;      // "taip"/"ne"
   const suvalgo=f['suvalgo'].value;  // "taip"/"ne"
@@ -784,7 +802,7 @@ function detectProblems(f){
   // Miegas
   if(f['miegas'] && f['miegas'].value==='sutrikusi') esamos.push("Sutrikęs miegas");
 
-  // Lovos režimas / pragulos
+  // Judėjimas / pragulos / griuvimai
   const bedRest=(f['mobilumas'].value==='lova');
   const needHelp=(f['mobilumas'].value==='pagalba');
   const hasPressureUlcer=(f['pragulos'].value==='yra');
@@ -799,6 +817,17 @@ function detectProblems(f){
 
   // Oda (žaizda)
   if(f['zaizdos'].value==='yra'){ const apr=(f['zaizdos_text'].value||'').trim(); esamos.push("Odos vientisumo pažeidimas (žaizda)"+(apr?(" – "+apr):"")); }
+
+  // NAUJA: galvos svaigimas
+  const headSpin = (f['galvos_svaigimas']?.value === 'taip');
+  let addExtrasForHelpDueToDizziness = false;
+  if(headSpin){
+    galimos.push("Rizika griuvimui dėl galvos svaigimo");
+    if(needHelp){
+      // jei „su pagalba“ + svaigimas → papildome „Judėjimas su pagalba“ planą
+      addExtrasForHelpDueToDizziness = true;
+    }
+  }
 
   // Skausmas – esamose problemose tik „Skausmas N/10“
   let painBlock=null;
@@ -818,7 +847,7 @@ function detectProblems(f){
   // Kraujavimo rizika
   if(f['kraujavimo_rizika'].value==='yra') galimos.push("Kraujavimo rizika");
 
-  return { error:false, esamos, galimos, pills, vitals:{spo2,temp,sys,dia,hr,map}, highSys30, painBlock };
+  return { error:false, esamos, galimos, pills, vitals:{spo2,temp,sys,dia,hr,map}, highSys30, painBlock, addExtrasForHelpDueToDizziness };
 }
 
 /* =========================================================
@@ -827,7 +856,7 @@ function detectProblems(f){
 let lastPayload=null;
 
 function renderOutput(f, ctx){
-  const { esamos, galimos, pills, vitals, highSys30, painBlock } = ctx;
+  const { esamos, galimos, pills, vitals, highSys30, painBlock, addExtrasForHelpDueToDizziness } = ctx;
   const { spo2, temp, sys, dia, hr, map } = vitals;
 
   const esamosU=uniq(esamos).sort();
@@ -892,10 +921,23 @@ function renderOutput(f, ctx){
       if(p==="Pragulos") return;
       if(p==="Rizika praguloms dėl lovos režimo") return;
     }
+    // jei yra „su pagalba + svaigimas“ — NEgeneruojam atskiro „Rizika griuvimui dėl galvos svaigimo“ plano,
+    // nes papildysime „Judėjimas su pagalba“ planą
+    if(addExtrasForHelpDueToDizziness && p==="Rizika griuvimui dėl galvos svaigimo") return;
+
     const key=Object.keys(slaugosPlanas).find(k=>p.startsWith(k));
     if(!key) return;
     const items=[...(slaugosPlanas[key]||[])];
+
+    // Esant aukštam SYS >165 — pridėti kas 30 min
     if(p.startsWith("Padidėjęs kraujo spaudimas") && highSys30){ items.push("AKS sekimas kas 30 min."); }
+
+    // NAUJA: jei „Judėjimas su pagalba“ + svaigimas — pridedam du papildomus punktus
+    if(addExtrasForHelpDueToDizziness && p==="Judėjimas su pagalba"){
+      items.push("AKS sekimas");
+      items.push("Griuvimų profilaktika");
+    }
+
     html+=`<div class="planas"><h4>${escapeHtml(p)}</h4><ul>${items.map(i=>`<li>${escapeHtml(i)}</li>`).join("")}</ul></div>`;
   });
 
@@ -949,11 +991,15 @@ function renderOutput(f, ctx){
       if(p==="Pragulos") return;
       if(p==="Rizika praguloms dėl lovos režimo") return;
     }
+    if(addExtrasForHelpDueToDizziness && p==="Rizika griuvimui dėl galvos svaigimo") return;
     const key=Object.keys(slaugosPlanas).find(k=>p.startsWith(k));
     if(!key) return;
     (slaugosPlanas[key]||[]).forEach(it=>{ if(!seenPlan.has(it)){ seenPlan.add(it); planItems.push(it); } });
     if(p.startsWith("Padidėjęs kraujo spaudimas") && highSys30){
       const it="AKS sekimas kas 30 min."; if(!seenPlan.has(it)){ seenPlan.add(it); planItems.push(it); }
+    }
+    if(addExtrasForHelpDueToDizziness && p==="Judėjimas su pagalba"){
+      ["AKS sekimas","Griuvimų profilaktika"].forEach(it=>{ if(!seenPlan.has(it)){ seenPlan.add(it); planItems.push(it); } });
     }
   });
 
@@ -1031,4 +1077,3 @@ function resetForm(){
 
 </body>
 </html>
-
