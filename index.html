@@ -136,19 +136,24 @@
   textarea{ min-height: 110px; }
   }
   
-/* ===== DVPRS: plėsti EILUTES (ne stulpelius) ===== */
-.dvprsItem{
-  min-height: 86px;
-  padding: 14px 16px;
-  align-items: center;
+/* ===== DVPRS: plėsti pačias korteles (eilutes), ne stulpelius ===== */
+.dvprsCard{
+  min-height: 96px;      /* padidina "eilutę" */
+  padding: 16px;         /* daugiau oro viduje */
+  display: flex;         /* kad vidus gražiai išsidėstytų */
+  flex-direction: column;
+  justify-content: center;
 }
+
 .dvprsText{
-  line-height: 1.25;
-  white-space: normal;
+  white-space: normal;   /* leisti tekstui laužytis */
 }
+
+/* kompe dar didesnės */
 @media (min-width: 980px){
-  .dvprsItem{ min-height: 96px; }
+  .dvprsCard{ min-height: 112px; }
 }
+
 </style>
 </head>
 
@@ -1226,6 +1231,7 @@ function resetForm(){
 
 </body>
 </html>
+
 
 
 
