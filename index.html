@@ -507,18 +507,18 @@ function valOrDash(v){ return (v==null||v==="")? "-" : v; }
 function escapeHtml(s){ return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;"); }
   function news2Text(score, hasCritical){
   if(score===0){
-    return "0 balų – paciento būklė stabili. Rekomenduojama tęsti stebėseną ir kartoti gyvybinius rodiklius pagal įprastą skyriaus tvarką.";
+    return "paciento būklė stabili. Rekomenduojama tęsti stebėseną ir kartoti gyvybinius rodiklius pagal įprastą skyriaus tvarką.";
   }
   if(score<=4 && !hasCritical){
-    return "1–4 balai – padidinta stebėsena. Rekomenduojama įvertinti bendrą paciento klinikinę būklę ir kartoti gyvybinius rodiklius dažniau kas 4–6 val.";
+    return "padidinta stebėsena. Rekomenduojama įvertinti bendrą paciento klinikinę būklę ir kartoti gyvybinius rodiklius dažniau kas 4–6 val.";
   }
   if(score<=4 && hasCritical){
     return "Yra bent vienas kritinis (3 balų) parametras – tai rodo galimą paciento būklės blogėjimą. Reikėtų įvertinti paciento būklę ir informuoti gydytoją. Gyvybinių rodiklių stebėjimą kartoti dažniau – kas 1 val.";
   }
   if(score<=6){
-    return "5–6 balai – vidutinė klinikinė rizika. Skubiai informuoti gydytoją, užtikrinti dažną paciento būklės stebėseną – kas 30–60 min., svarstyti papildomą monitoravimą pagal būklę.";
+    return "vidutinė klinikinė rizika. Skubiai informuoti gydytoją, užtikrinti dažną paciento būklės stebėseną – kas 30–60 min., svarstyti papildomą monitoravimą pagal būklę.";
   }
-  return "≥7 balai – aukšta klinikinė rizika. Nedelsiant pranešti gydytojui, reikalingas skubus gydytojo įvertinimas. Reikalinga nuolatinė gyvybinių rodiklių stebėsena.";
+  return "aukšta klinikinė rizika. Nedelsiant pranešti gydytojui, reikalingas skubus gydytojo įvertinimas. Reikalinga nuolatinė gyvybinių rodiklių stebėsena.";
 }
 function calcNEWS2({ rr, spo2, onO2, temp, sys, hr, avpu }) {
   let score = 0;
@@ -1199,6 +1199,7 @@ function resetForm(){
 
 </body>
 </html>
+
 
 
 
