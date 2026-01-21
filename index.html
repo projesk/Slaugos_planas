@@ -1136,6 +1136,7 @@ html += `<p><strong>Ankstyvojo perspėjimo skalė (NEWS2):</strong> ${news.score
     `Pacientas: ${psichoTekstas}\n`;
   if(restraintSentence) irasas+=`${restraintSentence}\n`;
   irasas+=`\n`;
+    `Ankstyvojo perspėjimo skalė (NEWS2): ${news.score} balai – ${news2Text(news.score, news.hasCritical)}\n\n` +
   if(hasDiet){ const dietaNote=(dietCode==='KITA')?dietCustom:dietCode; irasas+=`Pacientui skirta: ${dietaNote} dieta\n\n`; }
   irasas+=
     `Pirminis vertinimas:\n${pvSummaryText || "—"}\n\n`+
@@ -1191,5 +1192,6 @@ function resetForm(){
 
 </body>
 </html>
+
 
 
