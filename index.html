@@ -125,6 +125,7 @@
     padding: 12px 14px;
   }
   textarea{ min-height: 110px; }
+  }
 </style>
 </head>
 
@@ -569,7 +570,7 @@ function calcNEWS2({ rr, spo2, onO2, temp, sys, hr, avpu }) {
   }
 
   // AVPU + C
-  if(avpu!=='A'){ score+=3; hasCritical=true; }
+  if(avpu && avpu!=='A'){ score+=3; hasCritical=true; }
 
   return { score, hasCritical };
 } 
@@ -1131,18 +1132,24 @@ html += `<p><strong>Ankstyvojo perspėjimo skalė (NEWS2):</strong> ${news.score
   const slaugosProb=esamosU.length?esamosU.join('; '):'-';
   const galimosProb=galimosU.length?galimosU.join('; '):'-';
 
-  let irasas =
-    `Gyvybiniai rodikliai:\n${gyvybiniai}\n\n`+
-    `Pacientas: ${psichoTekstas}\n`;
-  if(restraintSentence) irasas+=`${restraintSentence}\n`;
-  irasas+=`\n`;
-    `Ankstyvojo perspėjimo skalė (NEWS2): ${news.score} balai – ${news2Text(news.score, news.hasCritical)}\n\n` +
-  if(hasDiet){ const dietaNote=(dietCode==='KITA')?dietCustom:dietCode; irasas+=`Pacientui skirta: ${dietaNote} dieta\n\n`; }
-  irasas+=
-    `Pirminis vertinimas:\n${pvSummaryText || "—"}\n\n`+
-    `Slaugos problemos:\n${slaugosProb}\n\n`+
-    `Galimos problemos:\n${galimosProb}\n\n`+
-    `Slaugos planas:\n${planasText}`;
+let irasas =
+  `Gyvybiniai rodikliai:\n${gyvybiniai}\n\n`+
+  `Pacientas: ${psichoTekstas}\n`;
+
+if(restraintSentence) irasas += `${restraintSentence}\n`;
+
+irasas += `\nAnkstyvojo perspėjimo skalė (NEWS2): ${news.score} balai – ${news2Text(news.score, news.hasCritical)}\n\n`;
+
+if(hasDiet){
+  const dietaNote = (dietCode==='KITA') ? dietCustom : dietCode;
+  irasas += `Pacientui skirta: ${dietaNote} dieta\n\n`;
+}
+
+irasas +=
+  `Pirminis vertinimas:\n${pvSummaryText || "—"}\n\n`+
+  `Slaugos problemos:\n${slaugosProb}\n\n`+
+  `Galimos problemos:\n${galimosProb}\n\n`+
+  `Slaugos planas:\n${planasText}`;
 
   lastPayload={
     "Laikas": new Date().toLocaleString('lt-LT'),
@@ -1192,6 +1199,7 @@ function resetForm(){
 
 </body>
 </html>
+
 
 
 
