@@ -74,7 +74,7 @@
 
   .modal{position:fixed;inset:0;display:block}
   .modal[aria-hidden="true"]{display:none}
-  .modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.45)}
+.modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.45)}
  .modal__sheet{
   position:absolute;
   left:50%;
@@ -804,7 +804,7 @@ const restraintPlan = [
 ];
 
 const dvprs = [
-{ n: 0,  emoji:"😀", color:"#16a34a", text:"NERA SKAUSMO" },
+  { n: 0,  emoji:"😀", color:"#16a34a", text:"NERA SKAUSMO" },
 
   { n: 1,  emoji:"🙂", color:"#22c55e", text:"NEPASTEBIMAS SKAUSMAS" },
   { n: 2,  emoji:"🙂", color:"#4ade80", text:"PASTEBIMAS SKAUSMAS, NEKELIANTIS NEPATOGUMŲ" },
@@ -824,8 +824,14 @@ const dvprs = [
 /* =========================================================
    3) DVPRS MODAL
 ========================================================= */
-function openDvprs(){ $('dvprsModal')?.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; }
-function closeDvprs(){ $('dvprsModal')?.setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
+function openDvprs(){
+  $('dvprsModal')?.setAttribute('aria-hidden','false');
+  document.body.style.overflow='hidden';
+}
+function closeDvprs(){
+  $('dvprsModal')?.setAttribute('aria-hidden','true');
+  document.body.style.overflow='';
+}
 function setPainFromDvprs(n){
   $('skausmas').value='taip';
   $('skausmoLygis').value=String(n);
@@ -833,19 +839,34 @@ function setPainFromDvprs(n){
   closeDvprs();
   $('skausmas_section')?.scrollIntoView({behavior:'smooth', block:'start'});
 }
+
 function renderDvprs(){
-  const grid=$('dvprsGrid'); if(!grid) return;
+  const grid = $('dvprsGrid');
+  if(!grid) return;
+
   grid.innerHTML = dvprs.map(item => `
-    <button type="button" class="dvprsCard" style="--dvprsColor:${item.color}" onclick="setPainFromDvprs(${item.n})">
-      <div class="dvprsBar" style="background-color:${lvl.color}"></div>
+    <button
+      type="button"
+      class="dvprsCard"
+      style="--dvprsColor:${item.color}"
+      onclick="setPainFromDvprs(${item.n})"
+      aria-label="Skausmo lygis ${item.n} iš 10"
+    >
+      <div class="dvprsBar" style="background-color:${item.color}"></div>
+
       <div class="dvprsTop">
-        <div class="dvprsLeft"><div class="dvprsEmoji" aria-hidden="true">${item.emoji}</div><div class="dvprsNum">${item.n}</div></div>
+        <div class="dvprsLeft">
+          <div class="dvprsEmoji" aria-hidden="true">${item.emoji}</div>
+          <div class="dvprsNum">${item.n}</div>
+        </div>
         <div class="dvprsTag">${item.n}/10</div>
       </div>
+
       <div class="dvprsText">${escapeHtml(item.text)}</div>
     </button>
   `).join("");
 }
+
 
 /* =========================================================
    4) INIT / EVENTAI
@@ -1236,6 +1257,7 @@ function resetForm(){
 
 </body>
 </html>
+
 
 
 
