@@ -114,7 +114,14 @@
   @media(min-width:980px){.dvprsGrid{grid-template-columns:repeat(3,1fr)}}
   .dvprsCard{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff;cursor:pointer;text-align:left;overflow:hidden}
   .dvprsCard:active{transform:scale(0.99)}
-  .dvprsBar{height:10px;border-radius:999px;margin-bottom:10px;background:var(--dvprsColor,#e5e7eb)}
+.dvprsBar{
+  height:10px;
+  border-radius:999px;
+  margin-bottom:10px;
+
+  background:#e5e7eb; /* fallback jeigu nepagauna kintamojo */
+  background-color:var(--dvprsColor,#e5e7eb);
+}
   .dvprsTop{display:flex;align-items:center;justify-content:space-between;gap:10px}
   .dvprsLeft{display:flex;align-items:center;gap:10px}
   .dvprsEmoji{font-size:26px;line-height:1}
@@ -138,15 +145,13 @@
   
 /* ===== DVPRS: plėsti pačias korteles (eilutes), ne stulpelius ===== */
 .dvprsCard{
-  min-height: 96px;      /* padidina "eilutę" */
-  padding: 16px;         /* daugiau oro viduje */
-  display: flex;         /* kad vidus gražiai išsidėstytų */
-  flex-direction: column;
-  justify-content: center;
+  min-height: 96px;       /* padidina "eilutę" */
+  padding: 16px;          /* daugiau oro viduje */
+  /* NEPRIVALOMA dėti display:flex – paliekam ramiai */
 }
 
 .dvprsText{
-  white-space: normal;   /* leisti tekstui laužytis */
+  white-space: normal;
 }
 
 /* kompe dar didesnės */
@@ -832,7 +837,7 @@ function renderDvprs(){
   const grid=$('dvprsGrid'); if(!grid) return;
   grid.innerHTML = dvprs.map(item => `
     <button type="button" class="dvprsCard" style="--dvprsColor:${item.color}" onclick="setPainFromDvprs(${item.n})">
-      <div class="dvprsBar"></div>
+      <div class="dvprsBar" style="background-color:${lvl.color}"></div>
       <div class="dvprsTop">
         <div class="dvprsLeft"><div class="dvprsEmoji" aria-hidden="true">${item.emoji}</div><div class="dvprsNum">${item.n}</div></div>
         <div class="dvprsTag">${item.n}/10</div>
@@ -1231,6 +1236,7 @@ function resetForm(){
 
 </body>
 </html>
+
 
 
 
