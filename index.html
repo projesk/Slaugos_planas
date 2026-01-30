@@ -1264,6 +1264,11 @@ if(goingHome){
   const psichoTekstas = `${pb_ramus?'ramus':'neramus'}, ${pb_orient?'orientuotas':'neorientuotas'}`;
 
   const tId = $('rekomTemplate')?.value || '';
+  if(!tId){
+  alert("Pasirinkite rekomendacijų šabloną (Rekomendacijų šablonas).");
+  $('rekomTemplate')?.focus();
+  return;
+}
   const tpl = (typeof DISCHARGE_TEMPLATES!=="undefined")
     ? DISCHARGE_TEMPLATES.find(x => x.id === tId)
     : null;
@@ -1306,29 +1311,6 @@ if(goingHome){
   $('results').innerHTML = html;
   return; // <<< svarbiausia: nebevykdom NEWS ir slaugos planas
 }
-
-    // Įrašas į Sheets
-    const gyvybiniai = vitalsText(spo2,sys,dia,map,hr,temp);
-    let irasas =
-      `Gyvybiniai rodikliai:\n${gyvybiniai}\n\n`+
-      `Pacientas: ${psichoTekstas}\n`+
-      `Pacientas vyksta namo.` + (ivOut ? ` Ištrauktas intraveninis kateteris.` : ``) + `\n\n`;
-
-    irasas += `Pacientui rekomenduota:\n`;
-    irasas += tpl ? tpl.items.map(i=>"• "+i).join("\n") : "—";
-
-    lastPayload={
-      "Laikas": new Date().toLocaleString('lt-LT'),
-      "palata": (f['palata'].value||"").trim(),
-      "lova":   (f['lova'].value||"").trim(),
-      "įrašas": irasas
-    };
-
-    $('results').innerHTML = html;
-    $('results').insertAdjacentHTML('beforeend', `<div class="mono">${escapeHtml(JSON.stringify(lastPayload,null,2))}</div>`);
-    return; // <<< labai svarbu
-  }
-
 
   const isRestrained = $('suvarzymas')?.checked===true;
   const nowTime = new Date().toLocaleTimeString('lt-LT',{hour:'2-digit',minute:'2-digit'});
@@ -1378,7 +1360,7 @@ if(goingHome){
   }
 
   // 2) Kiti planai (be dublių)
-  [...esamosU, ...galimosU].forEach(p=>{
+[esamosU, galimosU].forEach(p=>{
     if(combineBedRestAndUlcers){
       if(p==="Pragulos") return;
       if(p==="Rizika praguloms dėl lovos režimo") return;
@@ -1389,7 +1371,7 @@ if(goingHome){
 
     const key=Object.keys(slaugosPlanas).find(k=>p.startsWith(k));
     if(!key) return;
-    const items=[...(slaugosPlanas[key]||[])];
+    const items=[...(slaugosPlanas[key]||[])]
 
     // Esant aukštam SYS >165 — pridėti kas 30 min
     if(p.startsWith("Padidėjęs kraujo spaudimas") && highSys30){ items.push("AKS sekimas kas 30 min."); }
@@ -1560,6 +1542,7 @@ function resetForm(){
 
 </body>
 </html>
+
 
 
 
