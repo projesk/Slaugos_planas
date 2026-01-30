@@ -188,6 +188,26 @@
         <label><input type="checkbox" id="suvarzymas" /> Suvaržymas</label>
       </div>
       <div class="hint">Jei nepažymėta – įrašas bus: „Pacientas: neramus, neorientuotas“.</div>
+      <div class="row" style="margin-top:10px">
+  <label style="margin:0">
+    <input type="checkbox" id="vykstaNamo" />
+    Pacientas vyksta namo
+  </label>
+
+  <label style="margin:0">
+    <input type="checkbox" id="ivKateterisIstrauktas" />
+    Ištrauktas intraveninis kateteris
+  </label>
+</div>
+
+<div id="namoBox" style="display:none; margin-top:10px">
+  <label for="rekomTemplate">Rekomendacijų šablonas
+    <select id="rekomTemplate">
+      <option value="">— pasirinkti —</option>
+    </select>
+  </label>
+  <div class="hint">Pažymėjus „Pacientas vyksta namo“, NEWS ir slaugos planas nebegeneruojami – generuojamos rekomendacijos.</div>
+</div>
     </div>
 
     <!-- KVĖPAVIMO SISTEMA -->
@@ -1062,6 +1082,25 @@ onReady(() => {
   $('skausmas')?.addEventListener('change', e => { $('skausmoLygis')?.toggleAttribute('required', e.target.value === 'taip'); });
   $('resetBtn')?.addEventListener('click', resetForm);
   $('dieta_kodas')?.addEventListener('change', () => { $('dieta_kita_wrap').style.display = ($('dieta_kodas').value === 'KITA') ? 'block' : 'none'; });
+  // --- Discharge UI (pacientas vyksta namo) ---
+function toggleDischargeUI(){
+  const going = $('vykstaNamo')?.checked === true;
+  $('namoBox').style.display = going ? 'block' : 'none';
+}
+
+$('vykstaNamo')?.addEventListener('change', toggleDischargeUI);
+toggleDischargeUI();
+
+// Užpildom rekomendacijų select
+const sel = $('rekomTemplate');
+if(sel){
+  DISCHARGE_TEMPLATES.forEach(t=>{
+    const opt=document.createElement('option');
+    opt.value=t.id;          // naudok id
+    opt.textContent=t.name;  // rodomas pavadinimas
+    sel.appendChild(opt);
+  });
+}
 
   renderDvprs();
   $('openDvprsBtn')?.addEventListener('click', openDvprs);
@@ -1214,6 +1253,56 @@ function renderOutput(f, ctx){
   const pb_ramus=$('ramus')?.checked;
   const pb_orient=$('orientuotas')?.checked;
   const psichoTekstas = `${pb_ramus?'ramus':'neramus'}, ${pb_orient?'orientuotas':'neorientuotas'}`;
+    // --- DISCHARGE: jei pacientas vyksta namo, nebegeneruojam NEWS ir slaugos plano ---
+  const goingHome = $('vykstaNamo')?.checked === true;
+  if(goingHome){
+    const tId = $('rekomTemplate')?.value || '';
+    const tpl = DISCHARGE_TEMPLATES.find(x => x.id === tId);
+    const ivOut = $('ivKateterisIstrauktas')?.checked === true;
+
+    const aksStr = (sys!=null&&dia!=null)?`${sys} / ${dia} mmHg${map!=null?` (MAP ${map})`:''}`:'-';
+
+    // HTML (tik gyvybiniai + sakinys + rekomendacijos)
+    let html = "";
+    html += `<h3>Įvesti gyvybiniai rodikliai</h3>
+      <p><strong>SpO₂:</strong> ${valOrDash(spo2)} %<br>
+      <strong>AKS:</strong> ${aksStr}<br>
+      <strong>ŠSD:</strong> ${valOrDash(hr)} / min<br>
+      <strong>Temperatūra:</strong> ${temp!=null?temp.toFixed(1):"-"} °C</p>
+      <p><strong>Pacientas:</strong> ${escapeHtml(psichoTekstas)}</p>`;
+
+    html += `<p><strong>Pacientas vyksta namo.</strong>${ivOut ? " Ištrauktas intraveninis kateteris." : ""}</p>`;
+
+    if(tpl){
+      html += `<h3>Pacientui rekomenduota</h3><ul>${
+        tpl.items.map(it=>`<li>${escapeHtml(it)}</li>`).join("")
+      }</ul>`;
+    } else {
+      html += `<p><em>Rekomendacijų šablonas nepasirinktas.</em></p>`;
+    }
+
+    // Įrašas į Sheets
+    const gyvybiniai = vitalsText(spo2,sys,dia,map,hr,temp);
+    let irasas =
+      `Gyvybiniai rodikliai:\n${gyvybiniai}\n\n`+
+      `Pacientas: ${psichoTekstas}\n`+
+      `Pacientas vyksta namo.` + (ivOut ? ` Ištrauktas intraveninis kateteris.` : ``) + `\n\n`;
+
+    irasas += `Pacientui rekomenduota:\n`;
+    irasas += tpl ? tpl.items.map(i=>"• "+i).join("\n") : "—";
+
+    lastPayload={
+      "Laikas": new Date().toLocaleString('lt-LT'),
+      "palata": (f['palata'].value||"").trim(),
+      "lova":   (f['lova'].value||"").trim(),
+      "įrašas": irasas
+    };
+
+    $('results').innerHTML = html;
+    $('results').insertAdjacentHTML('beforeend', `<div class="mono">${escapeHtml(JSON.stringify(lastPayload,null,2))}</div>`);
+    return; // <<< labai svarbu
+  }
+
 
   const isRestrained = $('suvarzymas')?.checked===true;
   const nowTime = new Date().toLocaleTimeString('lt-LT',{hour:'2-digit',minute:'2-digit'});
@@ -1437,12 +1526,15 @@ function resetForm(){
   $('zaizdos_aprasymas').style.display='none';
   $('dieta_kita_wrap').style.display='none';
   closeDvprs();
+    // discharge UI reset
+  $('namoBox').style.display='none';
   lastPayload=null;
 }
 </script>
 
 </body>
 </html>
+
 
 
 
