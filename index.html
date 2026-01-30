@@ -1087,24 +1087,37 @@ onReady(() => {
   $('skausmas')?.addEventListener('change', e => { $('skausmoLygis')?.toggleAttribute('required', e.target.value === 'taip'); });
   $('resetBtn')?.addEventListener('click', resetForm);
   $('dieta_kodas')?.addEventListener('change', () => { $('dieta_kita_wrap').style.display = ($('dieta_kodas').value === 'KITA') ? 'block' : 'none'; });
-  // --- Discharge UI (pacientas vyksta namo) ---
+// --- Discharge UI (pacientas vyksta namo) ---
+function fillDischargeTemplates(){
+  const sel = $('rekomTemplate');
+  if(!sel) return;
+
+  // paliekam pirmą option (— pasirinkti —), kitus pašalinam
+  [...sel.querySelectorAll('option')].slice(1).forEach(o => o.remove());
+
+  if(typeof DISCHARGE_TEMPLATES === 'undefined' || !Array.isArray(DISCHARGE_TEMPLATES)) return;
+
+  DISCHARGE_TEMPLATES.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = t.name;
+    sel.appendChild(opt);
+  });
+}
+
 function toggleDischargeUI(){
   const going = $('vykstaNamo')?.checked === true;
-  $('').style.display = going ? 'block' : 'none';
+  const box = $('namoBox');
+  if(!box) return;
+  box.style.display = going ? 'block' : 'none';
 }
 
 $('vykstaNamo')?.addEventListener('change', toggleDischargeUI);
+
+// init
+fillDischargeTemplates();
 toggleDischargeUI();
 
-// Užpildom rekomendacijų select
-const sel = $('rekomTemplate');
-if(sel){
-  DISCHARGE_TEMPLATES.forEach(t=>{
-    const opt=document.createElement('option');
-    opt.value=t.id;          // naudok id
-    opt.textContent=t.name;  // rodomas pavadinimas
-    sel.appendChild(opt);
-  });
   document.addEventListener('DOMContentLoaded', () => {
   const cb  = document.getElementById('vykstaNamo');
   const box = document.getElementById('namoBox');
@@ -1583,4 +1596,5 @@ function resetForm(){
 
 </body>
 </html>
+
 
