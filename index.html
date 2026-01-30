@@ -193,12 +193,17 @@
     <input type="checkbox" id="vykstaNamo" />
     Pacientas vyksta namo
   </label>
-
-  <label style="margin:0">
-    <input type="checkbox" id="ivKateterisIstrauktas" />
-    Ištrauktas intraveninis kateteris
-  </label>
 </div>
+
+<div id="namoBox" style="display:none; margin-top:10px">
+  <label for="rekomTemplate">Rekomendacijų šablonas
+    <select id="rekomTemplate">
+      <option value="">— pasirinkti —</option>
+    </select>
+  </label>
+  <div class="hint">Pažymėjus „Pacientas vyksta namo“, NEWS ir slaugos planas nebegeneruojami – generuojamos rekomendacijos.</div>
+</div>
+
 
 <div id="namoBox" style="display:none; margin-top:10px">
   <label for="rekomTemplate">Rekomendacijų šablonas
@@ -799,6 +804,7 @@ const slaugosPlanas = {
     "Lovos/vežimėlio stabdžiai užfiksuoti prieš persodinant",
     "Reguliari stebėsena ir dokumentavimas"
   ]
+    };
   const DISCHARGE_TEMPLATES = [
   {
     id: "gerklu_mikroskopine",
@@ -1253,33 +1259,65 @@ function renderOutput(f, ctx){
   const pb_ramus=$('ramus')?.checked;
   const pb_orient=$('orientuotas')?.checked;
   const psichoTekstas = `${pb_ramus?'ramus':'neramus'}, ${pb_orient?'orientuotas':'neorientuotas'}`;
-    // --- DISCHARGE: jei pacientas vyksta namo, nebegeneruojam NEWS ir slaugos plano ---
-  const goingHome = $('vykstaNamo')?.checked === true;
-  if(goingHome){
-    const tId = $('rekomTemplate')?.value || '';
-    const tpl = DISCHARGE_TEMPLATES.find(x => x.id === tId);
-    const ivOut = $('ivKateterisIstrauktas')?.checked === true;
+// ===== IŠRAŠYMAS Į NAMUS (be NEWS ir be slaugos plano) =====
+const goingHome = $('vykstaNamo')?.checked === true;
+if(goingHome){
+  const spo2 = toNum(f['saturacija'].value);
+  const temp = toNum(f['temperatura'].value);
+  const sys  = toNum(f['sistolinis'].value);
+  const dia  = toNum(f['diastolinis'].value);
+  const hr   = toNum(f['pulsas'].value);
+  const map  = calcMAP(sys,dia);
 
-    const aksStr = (sys!=null&&dia!=null)?`${sys} / ${dia} mmHg${map!=null?` (MAP ${map})`:''}`:'-';
+  const aksStr = (sys!=null&&dia!=null)?`${sys} / ${dia} mmHg${map!=null?` (MAP ${map})`:''}`:'-';
 
-    // HTML (tik gyvybiniai + sakinys + rekomendacijos)
-    let html = "";
-    html += `<h3>Įvesti gyvybiniai rodikliai</h3>
-      <p><strong>SpO₂:</strong> ${valOrDash(spo2)} %<br>
-      <strong>AKS:</strong> ${aksStr}<br>
-      <strong>ŠSD:</strong> ${valOrDash(hr)} / min<br>
-      <strong>Temperatūra:</strong> ${temp!=null?temp.toFixed(1):"-"} °C</p>
-      <p><strong>Pacientas:</strong> ${escapeHtml(psichoTekstas)}</p>`;
+  const pb_ramus = $('ramus')?.checked === true;
+  const pb_orient = $('orientuotas')?.checked === true;
+  const psichoTekstas = `${pb_ramus?'ramus':'neramus'}, ${pb_orient?'orientuotas':'neorientuotas'}`;
 
-    html += `<p><strong>Pacientas vyksta namo.</strong>${ivOut ? " Ištrauktas intraveninis kateteris." : ""}</p>`;
+  const tId = $('rekomTemplate')?.value || '';
+  const tpl = (typeof DISCHARGE_TEMPLATES!=="undefined")
+    ? DISCHARGE_TEMPLATES.find(x => x.id === tId)
+    : null;
 
-    if(tpl){
-      html += `<h3>Pacientui rekomenduota</h3><ul>${
-        tpl.items.map(it=>`<li>${escapeHtml(it)}</li>`).join("")
-      }</ul>`;
-    } else {
-      html += `<p><em>Rekomendacijų šablonas nepasirinktas.</em></p>`;
-    }
+  // HTML
+  let html = "";
+  html += `<h3>Įvesti gyvybiniai rodikliai</h3>
+    <p><strong>SpO₂:</strong> ${valOrDash(spo2)} %<br>
+    <strong>AKS:</strong> ${aksStr}<br>
+    <strong>ŠSD:</strong> ${valOrDash(hr)} / min<br>
+    <strong>Temperatūra:</strong> ${temp!=null?temp.toFixed(1):"-"} °C</p>
+    <p><strong>Pacientas:</strong> ${escapeHtml(psichoTekstas)}</p>`;
+
+  html += `<p><strong>Pacientas vyksta namo, ištrauktas intraveninis kateteris.</strong></p>`;
+
+  if(tpl){
+    html += `<h3>Pacientui rekomenduota</h3><ul>${
+      tpl.items.map(it=>`<li>${escapeHtml(it)}</li>`).join("")
+    }</ul>`;
+  } else {
+    html += `<p><em>Rekomendacijų šablonas nepasirinktas.</em></p>`;
+  }
+
+  // Įrašas į Sheets
+  const gyvybiniai = vitalsText(spo2,sys,dia,map,hr,temp);
+  let irasas =
+    `Gyvybiniai rodikliai:\n${gyvybiniai}\n\n`+
+    `Pacientas: ${psichoTekstas}\n`+
+    `Pacientas vyksta namo, ištrauktas intraveninis kateteris.\n\n`+
+    `Pacientui rekomenduota:\n` +
+    (tpl ? tpl.items.map(i=>"• "+i).join("\n") : "—");
+
+  lastPayload={
+    "Laikas": new Date().toLocaleString('lt-LT'),
+    "palata": (f['palata'].value||"").trim(),
+    "lova":   (f['lova'].value||"").trim(),
+    "įrašas": irasas
+  };
+
+  $('results').innerHTML = html;
+  return; // <<< svarbiausia: nebevykdom NEWS ir slaugos planas
+}
 
     // Įrašas į Sheets
     const gyvybiniai = vitalsText(spo2,sys,dia,map,hr,temp);
@@ -1534,6 +1572,7 @@ function resetForm(){
 
 </body>
 </html>
+
 
 
 
