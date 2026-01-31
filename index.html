@@ -1267,27 +1267,37 @@ function renderOutput(f, ctx){
   const pb_ramus=$('ramus')?.checked;
   const pb_orient=$('orientuotas')?.checked;
   const psichoTekstas = `${pb_ramus?'ramus':'neramus'}, ${pb_orient?'orientuotas':'neorientuotas'}`;
-// ===== IŠRAŠYMAS Į NAMUS (be NEWS ir be slaugos plano) =====
-const goingHome = $('vykstaNamo')?.checked === true;
-if(goingHome){
-  const spo2 = toNum(f['saturacija'].value);
-  const temp = toNum(f['temperatura'].value);
-  const sys  = toNum(f['sistolinis'].value);
-  const dia  = toNum(f['diastolinis'].value);
-  const hr   = toNum(f['pulsas'].value);
-  const map  = calcMAP(sys,dia);
+  // ===== IŠRAŠYMAS Į NAMUS (papildomai prie plano) =====
+  const goingHome = $('vykstaNamo')?.checked === true;
 
-  const aksStr = (sys!=null&&dia!=null)?`${sys} / ${dia} mmHg${map!=null?` (MAP ${map})`:''}`:'-';
+  let dischargeHtml = "";
+  let dischargeText = "";
 
-  const pb_ramus = $('ramus')?.checked === true;
-  const pb_orient = $('orientuotas')?.checked === true;
-  const psichoTekstas = `${pb_ramus?'ramus':'neramus'}, ${pb_orient?'orientuotas':'neorientuotas'}`;
+  if(goingHome){
+    const tId = $('rekomTemplate')?.value || '';
+    const tpl = (typeof DISCHARGE_TEMPLATES!=="undefined")
+      ? DISCHARGE_TEMPLATES.find(x => x.id === tId)
+      : null;
 
-  const tId = $('rekomTemplate')?.value || '';
-  if(!tId){
-  alert("Pasirinkite rekomendacijų šabloną (Rekomendacijų šablonas).");
-  $('rekomTemplate')?.focus();
-  return;
+    // papildomas HTML blokas rezultatams
+    dischargeHtml += `<p><strong>Pacientas vyksta namo, ištrauktas intraveninis kateteris.</strong></p>`;
+
+    if(tpl){
+      dischargeHtml += `<h3>Pacientui rekomenduota</h3><ul>${
+        tpl.items.map(it=>`<li>${escapeHtml(it)}</li>`).join("")
+      }</ul>`;
+
+      dischargeText =
+        `Pacientas vyksta namo, ištrauktas intraveninis kateteris.\n\n` +
+        `Pacientui rekomenduota:\n` +
+        tpl.items.map(i=>"• "+i).join("\n");
+    } else {
+      dischargeHtml += `<p><em>Rekomendacijų šablonas nepasirinktas.</em></p>`;
+      dischargeText =
+        `Pacientas vyksta namo, ištrauktas intraveninis kateteris.\n` +
+        `Pacientui rekomenduota: —`;
+    }
+  }
 }
   const tpl = (typeof DISCHARGE_TEMPLATES!=="undefined")
     ? DISCHARGE_TEMPLATES.find(x => x.id === tId)
@@ -1327,7 +1337,9 @@ if(goingHome){
     "lova":   (f['lova'].value||"").trim(),
     "įrašas": irasas
   };
-
+  if(dischargeHtml){
+    html += `<hr>${dischargeHtml}`;
+  }
   $('results').innerHTML = html;
   return; // <<< svarbiausia: nebevykdom NEWS ir slaugos planas
 }
@@ -1511,7 +1523,9 @@ irasas +=
   `Slaugos problemos:\n${slaugosProb}\n\n`+
   `Galimos problemos:\n${galimosProb}\n\n`+
   `Slaugos planas:\n${planasText}`;
-
+if (dischargeText) {
+  irasas += `\n\n${dischargeText}`;
+}
   lastPayload={
     "Laikas": new Date().toLocaleString('lt-LT'),
     "palata": (f['palata'].value||"").trim(),
@@ -1554,14 +1568,19 @@ function resetForm(){
   $('zaizdos_aprasymas').style.display='none';
   $('dieta_kita_wrap').style.display='none';
   closeDvprs();
-    // discharge UI reset
-  $('').style.display='none';
+
+  // ✅ discharge UI reset
+  $('vykstaNamo').checked = false;     // ✅ nuima varnelę
+  $('namoBox').style.display='none';   // ✅ paslepia šabloną
+  $('rekomTemplate').value = "";       // ✅ išvalo pasirinkimą
+
   lastPayload=null;
 }
 </script>
 
 </body>
 </html>
+
 
 
 
