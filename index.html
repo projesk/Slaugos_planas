@@ -1109,7 +1109,13 @@ onReady(() => {
     const going = $('vykstaNamo')?.checked === true;
     const box = $('namoBox');
     if(!box) return;
-    box.style.display = going ? 'block' : 'none';
+   function toggleDischargeUI(){
+  const going = $('vykstaNamo')?.checked === true;
+  const box = $('namoBox');
+  if (box) box.style.display = going ? 'block' : 'none';
+}
+$('vykstaNamo')?.addEventListener('change', toggleDischargeUI);
+toggleDischargeUI();
   }
 
   fillDischargeTemplates();
@@ -1561,25 +1567,31 @@ function keltiISistema(){
 }
 
 function resetForm(){
-  $('nursingForm').reset();
-  $('results').innerHTML="";
-  $('statusOk').style.display='none';
-  $('statusErr').style.display='none';
-  $('zaizdos_aprasymas').style.display='none';
-  $('dieta_kita_wrap').style.display='none';
-  closeDvprs();
+  $('nursingForm')?.reset();
+  if($('results')) $('results').innerHTML = "";
+  if($('statusOk')) $('statusOk').style.display='none';
+  if($('statusErr')) $('statusErr').style.display='none';
+  if($('zaizdos_aprasymas')) $('zaizdos_aprasymas').style.display='none';
+  if($('dieta_kita_wrap')) $('dieta_kita_wrap').style.display='none';
+  if(typeof closeDvprs === "function") closeDvprs();
 
-  // ✅ discharge UI reset
-  $('vykstaNamo').checked = false;     // ✅ nuima varnelę
-  $('namoBox').style.display='none';   // ✅ paslepia šabloną
-  $('rekomTemplate').value = "";       // ✅ išvalo pasirinkimą
+  // discharge UI reset (saugiai)
+  const vn = $('vykstaNamo');
+  if(vn) vn.checked = false;
 
-  lastPayload=null;
+  const box = $('namoBox');
+  if(box) box.style.display = 'none';
+
+  const sel = $('rekomTemplate');
+  if(sel) sel.value = "";
+
+  lastPayload = null;
 }
 </script>
 
 </body>
 </html>
+
 
 
 
