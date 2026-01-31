@@ -47,18 +47,7 @@
   .checks input{width:auto;margin:0}
   .hint{margin-top:8px;color:var(--muted);font-size:12px;line-height:1.35}
 
-  .actions{
-  max-width:1100px;
-  margin:0 auto;
-  padding:0 16px 20px;
-
-  display:grid;   /* ✅ vietoj flex */
-  gap:10px;
-}
-
-.actions button{
-  width:100%;     /* ✅ visi per visą plotį */
-}
+  .actions{max-width:1100px;margin:0 auto;padding:0 16px 20px;display:flex;gap:10px;flex-wrap:wrap}
   button{cursor:pointer;border:none}
   #genBtn{background:var(--accent);color:#fff;font-weight:800}
   button.secondary{background:#fff;border:1px solid var(--line);font-weight:700}
@@ -199,22 +188,8 @@
         <label><input type="checkbox" id="suvarzymas" /> Suvaržymas</label>
       </div>
       <div class="hint">Jei nepažymėta – įrašas bus: „Pacientas: neramus, neorientuotas“.</div>
-      <div class="row" style="margin-top:10px">
-  <label style="margin:0">
-    <input type="checkbox" id="vykstaNamo" />
-    Pacientas vyksta namo
-  </label>
-</div>
+    </div>
 
-<div id="namoBox" style="display:none; margin-top:10px">
-  <label for="rekomTemplate">Rekomendacijų šablonas
-    <select id="rekomTemplate">
-      <option value="">— pasirinkti —</option>
-    </select>
-  </label>
-  <div class="hint">Pažymėjus „Pacientas vyksta namo“, NEWS ir slaugos planas nebegeneruojami – generuojamos rekomendacijos.</div>
-</div>
-</div>
     <!-- KVĖPAVIMO SISTEMA -->
     <div class="section">
       <h2>Kvėpavimo sistema</h2>
@@ -804,193 +779,7 @@ const slaugosPlanas = {
     "Lovos/vežimėlio stabdžiai užfiksuoti prieš persodinant",
     "Reguliari stebėsena ir dokumentavimas"
   ]
-    };
-  const DISCHARGE_TEMPLATES = [
-  {
-    id: "gerklu_mikroskopine",
-    name: "Po mikroskopinės gerklų operacijos (balso klosčių dariniai)",
-    items: [
-      "Tylos režimas 5 d.",
-      "Balsą tausojantis režimas 2 sav. (nekalbėti pakeltu tonu, nešnibždėti, nedainuoti).",
-      "Namų režimas 2 sav.; vengti kelionių, dūmų, dulkių, karštų patalpų.",
-      "Riboti fizinį krūvį 2 sav., nekelti sunkių daiktų.",
-      "Vengti pirčių, karštų vonių, baseinų, soliariumų 2 sav.",
-      "Ryte ir vakare matuoti temperatūrą."
-    ]
-  },
-  {
-    id: "konchoplastika",
-    name: "Po nosies kriauklių operacijos (konchoplastika)",
-    items: [
-      "Ryte ir vakare matuoti temperatūrą; >38°C – kreiptis į šeimos gydytoją (nevartoti aspirino).",
-      "Nepūsti nosies ~1 sav.",
-      "Namų režimas 2 sav.; vengti kelionių, dūmų, dulkių, karštų patalpų.",
-      "Riboti fizinį krūvį 2 sav., nekelti sunkių daiktų; vengti kontaktų 1 mėn.",
-      "Vengti pirčių, karštų vonių, baseinų, soliariumų 2 sav.",
-      "Plauti ir drėkinti nosį kaip nurodė gydytojas.",
-      "Užsitęsus karščiavimui ar prasidėjus gausiam kraujavimui – skubi pagalba."
-    ]
-  },
-  {
-    id: "nosikauliu_luziai_rinoseptoplastika",
-    name: "Po nosikaulių lūžių atstatymo / po rinoseptoplastikos",
-    items: [
-      "Ryte ir vakare matuoti temperatūrą; >38°C – kreiptis į šeimos gydytoją (nevartoti aspirino).",
-      "Nepūsti nosies ~1 sav.",
-      "Namų režimas 2 sav. (vengti kelionių, dūmų, dulkių, karštų patalpų).",
-      "Riboti fizinį krūvį 2 sav., nekelti sunkių daiktų.",
-      "Jei yra rizika užsigauti nosį – vengti kontaktų 1–1,5 mėn.",
-      "Vengti pirčių, karštų vonių, baseinų, soliariumų 2 sav.",
-      "Jei buvo gipsas po lūžių atstatymo – nešioti iki 10 d.; sušlapus nebedėti atgal.",
-      "Plauti ir drėkinti nosį kaip nurodė gydytojas.",
-      "Užsitęsus karščiavimui ar prasidėjus gausiam kraujavimui – kreiptis į skubią pagalbą."
-    ]
-  },
-  {
-    id: "septoplastika_funkcine_rinoplastika",
-    name: "Po septoplastikos / funkcinės rinoplastikos",
-    items: [
-      "Ryte ir vakare matuoti temperatūrą; >38°C – kreiptis į šeimos gydytoją (nevartoti aspirino).",
-      "Nepūsti nosies ~1 sav.",
-      "Galimas nosies užgulimas pirmomis dienomis – tai normalu.",
-      "Namų režimas 2 sav. (vengti kelionių, dūmų, dulkių, karštų patalpų).",
-      "Riboti fizinį krūvį 2 sav., nekelti sunkių daiktų.",
-      "Vengti kontaktų / smūgio į nosį 1 mėn.",
-      "Vengti pirčių, karštų vonių, baseinų, soliariumų 2 sav.",
-      "Plauti ir drėkinti nosį kaip nurodė gydytojas.",
-      "Užsitęsus karščiavimui ar prasidėjus gausiam kraujavimui – skubi pagalba."
-    ]
-  },
-  {
-    id: "tonzilektomija",
-    name: "Po tonzilių pašalinimo",
-    items: [
-      "Skausmui – Paracetamolis arba Ibuprofenas 2–3 k./d. (nevartoti Aspirino, Ketanovo).",
-      "Galimas karščiavimas iki 37,5°C ~2 sav.; >38°C ilgiau nei 3 d. – kreiptis į šeimos gydytoją.",
-      "2 sav. vengti karšto, aštraus, rūgštaus, kieto, traškaus maisto.",
-      "Rekomenduojamas skystas/trintas, baltymingas maistas 2 sav.",
-      "Gerti ≥ 125 ml kas 2 val. (negazuoti gėrimai).",
-      "2 sav. nesimaudyti karštoje vonioje, neplauti galvos (galima dušas, jei gerai jaučiasi).",
-      "Dantis valyti švelniai, su mažai pastos; neskalauti burnos.",
-      "2 sav. riboti fizinį krūvį; nekelti sunkių daiktų; vengti sporto, pirčių, baseinų, soliariumų.",
-      "10 d. vengti krenkštimo/kosėjimo.",
-      "Jei atsiranda kraujavimas – šaldyti kaklo sritį, laikyti galvą palenktą į priekį; jei kraujo >15 ml ar „kavos tirščių“ vėmimas – skubi pagalba.",
-      "Vaikui – rekomenduojama suaugusiojo priežiūra naktį 2 sav."
-    ]
-  },
-  {
-    id: "adenoidektomija",
-    name: "Po adenoidų pašalinimo",
-    items: [
-      "Galimas nedidelis gerklės skausmas kelias dienas; skausmui – Paracetamolis arba Ibuprofenas (nevartoti Aspirino, Ketanovo).",
-      "Galimas karščiavimas iki 37,5°C ~2 sav.; >38°C ilgiau nei 3 d. – kreiptis į šeimos gydytoją.",
-      "Pirmas 3 paras vengti karšto, aštraus, rūgštaus, kieto, traškaus maisto.",
-      "Rekomenduojamas skystas/trintas maistas 3 paras.",
-      "Gerti ≥ 125 ml kas 2 val. (negazuoti gėrimai).",
-      "1 sav. nesimaudyti karštoje vonioje, neplauti galvos (galima dušas, jei gerai jaučiasi).",
-      "Dantis valyti švelniai, su mažai pastos; neskalauti burnos.",
-      "2 sav. riboti fizinį krūvį; vengti sporto, pirčių, baseinų, soliariumų.",
-      "10 d. vengti krenkštimo/kosėjimo.",
-      "Jei prasideda kraujavimas iš nosies ar su seilėmis – šaldyti kaktos srityje, galvą laikyti palenktą į priekį; jei kraujo >15 ml – skubi pagalba.",
-      "Vaikui – rekomenduojama suaugusiojo priežiūra naktį 2 sav."
-    ]
-  },
-  {
-    id: "tonziles_adenoidai_bendra",
-    name: "Bendra po tonzilių / adenoidų pašalinimo",
-    items: [
-      "Skausmui – Paracetamolis arba Ibuprofenas 2–3 k./d. (nevartoti Aspirino, Ketanovo).",
-      "Galimas karščiavimas iki 37,5°C ~2 sav.; >38°C ilgiau nei 3 d. – kreiptis į šeimos gydytoją.",
-      "2 sav. vengti karšto, aštraus, rūgštaus, kieto, traškaus maisto.",
-      "Rekomenduojamas skystas/trintas maistas (ypač pirmas dienas).",
-      "Gerti ≥ 125 ml kas 2 val. (negazuoti gėrimai).",
-      "1–2 sav. nesimaudyti karštoje vonioje, neplauti galvos (galima dušas, jei gerai jaučiasi).",
-      "Dantis valyti švelniai; neskalauti burnos.",
-      "2 sav. riboti fizinį krūvį; nekelti sunkių daiktų; vengti sporto, pirčių, baseinų, soliariumų.",
-      "10 d. vengti krenkštimo/kosėjimo.",
-      "Jei atsiranda reikšmingas kraujavimas (>15 ml) ar „kavos tirščių“ vėmimas – skubi pagalba.",
-      "Vaikui – rekomenduojama suaugusiojo priežiūra naktį 2 sav."
-    ]
-  },
-  {
-    id: "tracheostoma_trumpai",
-    name: "Tracheostoma – pagrindinės rekomendacijos (trumpai)",
-    items: [
-      "Tracheostominį vamzdelį keisti 1 k./parą arba kaip nurodė gydytojas.",
-      "Keisti nedelsiant, jei atsiranda užsikimšimo požymių (dusulys, triukšmingas kvėpavimas). Laikytis rankų higienos.",
-      "Kasdien apžiūrėti ir nuplauti odą aplink stomą; gerai nusausinti.",
-      "~1 mėn. dėti tvarstį po vamzdeliu; keisti, kai susitepa.",
-      "Vamzdelis turi laikytis tvirtai, bet nespausti kaklo (2 pirštai).",
-      "Susitepusius raištelius pakeisti.",
-      "Tracheostomą visada pridengti švaria marle / filtru.",
-      "Galima drėkinti įkvepiamą orą (drėgna marlė, fiziologinis tirpalas – jei paskirta), taip pat rekomenduojama naudoti oro drėkintuvus sausose patalpose.",
-      "Maudantis saugoti, kad vanduo nepatektų į vamzdelį.",
-      "Turėti atsarginius vamzdelius (jei paskirta).",
-      "Jei vamzdelis užsikimšo – bandyti atkosėti sėdint, pasilenkus į priekį; jei nepavyksta – skubi pagalba.",
-      "Į gydytoją kreiptis, jei: pasirodė kraujas iš tracheostomos; atsirado paraudimas/patinimas aplink stomą; pakito sekretas ar atsirado blogas kvapas; prasidėjo karščiavimas; didėjantis dusulys."
-    ]
-  },
-  {
-    id: "zaizda_isorine_bendra",
-    name: "Bendros rekomendacijos po operacijų su išorine žaizda",
-    items: [
-      "Tvarstį laikyti švarų ir sausą; keisti kasdien ar susitepus.",
-      "Naudoti gydytojo ar vaistininko rekomenduotą antiseptiką.",
-      "Nešlapinti 24–48 val.; vėliau trumpas dušas be trynimo.",
-      "Nemirkyti žaizdos 2 sav.",
-      "Neliesti nešvariomis rankomis, nekrapštyti šašo.",
-      "Riboti fizinį krūvį 7–14 d.",
-      "Kreiptis į gydytoją esant paraudimui, pūliavimui ar karščiavimas >38°C."
-    ]
-  },
-  {
-    id: "uzausio_pjuvis",
-    name: "Po operacijos su užausio pjūviu",
-    items: [
-      "Tvarstį laikyti sausą; keisti kasdien ar susitepus.",
-      "Naudoti gydytojo ar vaistininko rekomenduotą antiseptiką.",
-      "Nešlapinti 24–48 val.; neplauti galvos.",
-      "Žaizdos nemirkyti 2 sav.",
-      "Vengti spaudimo (ausinės, akiniai, kepurės).",
-      "Miegoti ant priešingos pusės 7–10 d.",
-      "Saugoti nuo saulės 1–2 mėn.",
-      "Riboti fizinį krūvį 7–14 d.",
-      "Skubiai kreiptis, jei paraudimas, pūliavimas, žaizdos prasiskyrimas ar karščiavimas >38°C."
-    ]
-  },
-  {
-    id: "kaklo_pjuvis",
-    name: "Po operacijos su kaklo pjūviu",
-    items: [
-      "Tvarstį laikyti sausą; keisti kasdien.",
-      "Naudoti gydytojo ar vaistininko rekomenduotą antiseptiką.",
-      "Nešlapinti 24–48 val.",
-      "Žaizdos nemirkyti 2 sav.",
-      "Vengti spaudimo (aptemptos apykaklės, šalikai).",
-      "Vengti staigių kaklo judesių 7–10 d.",
-      "Saugoti nuo saulės 1–2 mėn.",
-      "Riboti fizinį krūvį 7–14 d.",
-      "Skubiai kreiptis, jei paraudimas, pūliavimas, žaizdos prasiskyrimas ar karščiavimas >38°C."
-    ]
-  },
-  {
-    id: "veido_zaizda",
-    name: "Po operacijos su žaizda veido srityje",
-    items: [
-      "Tvarstį laikyti sausą; keisti kasdien.",
-      "Nešlapinti 24–48 val.",
-      "Naudoti gydytojo ar vaistininko rekomenduotą antiseptiką.",
-      "Žaizdos nemirkyti 2 sav.",
-      "Neliesti žaizdos nešvariomis rankomis.",
-      "Nekrapštyti šašo, nenuplėšti pleistrų.",
-      "Vengti spaudimo ir tempimo žaizdos srityje.",
-      "Vengti makiažo, kremų, šveitiklių iki leidimo.",
-      "Saugoti nuo saulės 1–2 mėn. (vėliau – SPF 50+).",
-      "Riboti fizinį krūvį 7–14 d.",
-      "Skubiai kreiptis, jei paraudimas, pūliavimas, žaizdos prasiskyrimas ar karščiavimas >38°C."
-    ]
-  }
-];
+};
 
 const dietPlan = {
   "P1": [], "P4": [],
@@ -1087,34 +876,6 @@ onReady(() => {
   $('skausmas')?.addEventListener('change', e => { $('skausmoLygis')?.toggleAttribute('required', e.target.value === 'taip'); });
   $('resetBtn')?.addEventListener('click', resetForm);
   $('dieta_kodas')?.addEventListener('change', () => { $('dieta_kita_wrap').style.display = ($('dieta_kodas').value === 'KITA') ? 'block' : 'none'; });
- // --- Discharge UI (pacientas vyksta namo) ---
-function fillDischargeTemplates(){
-  const sel = $('rekomTemplate');
-  if(!sel) return;
-
-  // paliekam tik pirmą "— pasirinkti —"
-  [...sel.querySelectorAll('option')].slice(1).forEach(o => o.remove());
-
-  if(!Array.isArray(DISCHARGE_TEMPLATES)) return;
-
-  DISCHARGE_TEMPLATES.forEach(t => {
-    const opt = document.createElement('option');
-    opt.value = t.id;
-    opt.textContent = t.name;
-    sel.appendChild(opt);
-  });
-}
-
-function toggleDischargeUI(){
-  const going = $('vykstaNamo')?.checked === true;
-  const box = $('namoBox');
-  if(!box) return;
-  box.style.display = going ? 'block' : 'none';
-}
-
-fillDischargeTemplates();
-toggleDischargeUI();
-$('vykstaNamo')?.addEventListener('change', toggleDischargeUI);
 
   renderDvprs();
   $('openDvprsBtn')?.addEventListener('click', openDvprs);
@@ -1267,82 +1028,6 @@ function renderOutput(f, ctx){
   const pb_ramus=$('ramus')?.checked;
   const pb_orient=$('orientuotas')?.checked;
   const psichoTekstas = `${pb_ramus?'ramus':'neramus'}, ${pb_orient?'orientuotas':'neorientuotas'}`;
-  // ===== IŠRAŠYMAS Į NAMUS (papildomai prie plano) =====
-  const goingHome = $('vykstaNamo')?.checked === true;
-
-  let dischargeHtml = "";
-  let dischargeText = "";
-
-  if(goingHome){
-    const tId = $('rekomTemplate')?.value || '';
-    const tpl = (typeof DISCHARGE_TEMPLATES!=="undefined")
-      ? DISCHARGE_TEMPLATES.find(x => x.id === tId)
-      : null;
-
-    // papildomas HTML blokas rezultatams
-    dischargeHtml += `<p><strong>Pacientas vyksta namo, ištrauktas intraveninis kateteris.</strong></p>`;
-
-    if(tpl){
-      dischargeHtml += `<h3>Pacientui rekomenduota</h3><ul>${
-        tpl.items.map(it=>`<li>${escapeHtml(it)}</li>`).join("")
-      }</ul>`;
-
-      dischargeText =
-        `Pacientas vyksta namo, ištrauktas intraveninis kateteris.\n\n` +
-        `Pacientui rekomenduota:\n` +
-        tpl.items.map(i=>"• "+i).join("\n");
-    } else {
-      dischargeHtml += `<p><em>Rekomendacijų šablonas nepasirinktas.</em></p>`;
-      dischargeText =
-        `Pacientas vyksta namo, ištrauktas intraveninis kateteris.\n` +
-        `Pacientui rekomenduota: —`;
-    }
-  }
-}
-  const tpl = (typeof DISCHARGE_TEMPLATES!=="undefined")
-    ? DISCHARGE_TEMPLATES.find(x => x.id === tId)
-    : null;
-
-  // HTML
-  let html = "";
-  html += `<h3>Įvesti gyvybiniai rodikliai</h3>
-    <p><strong>SpO₂:</strong> ${valOrDash(spo2)} %<br>
-    <strong>AKS:</strong> ${aksStr}<br>
-    <strong>ŠSD:</strong> ${valOrDash(hr)} / min<br>
-    <strong>Temperatūra:</strong> ${temp!=null?temp.toFixed(1):"-"} °C</p>
-    <p><strong>Pacientas:</strong> ${escapeHtml(psichoTekstas)}</p>`;
-
-  html += `<p><strong>Pacientas vyksta namo, ištrauktas intraveninis kateteris.</strong></p>`;
-
-  if(tpl){
-    html += `<h3>Pacientui rekomenduota</h3><ul>${
-      tpl.items.map(it=>`<li>${escapeHtml(it)}</li>`).join("")
-    }</ul>`;
-  } else {
-    html += `<p><em>Rekomendacijų šablonas nepasirinktas.</em></p>`;
-  }
-
-  // Įrašas į Sheets
-  const gyvybiniai = vitalsText(spo2,sys,dia,map,hr,temp);
-  let irasas =
-    `Gyvybiniai rodikliai:\n${gyvybiniai}\n\n`+
-    `Pacientas: ${psichoTekstas}\n`+
-    `Pacientas vyksta namo, ištrauktas intraveninis kateteris.\n\n`+
-    `Pacientui rekomenduota:\n` +
-    (tpl ? tpl.items.map(i=>"• "+i).join("\n") : "—");
-
-  lastPayload={
-    "Laikas": new Date().toLocaleString('lt-LT'),
-    "palata": (f['palata'].value||"").trim(),
-    "lova":   (f['lova'].value||"").trim(),
-    "įrašas": irasas
-  };
-  if(dischargeHtml){
-    html += `<hr>${dischargeHtml}`;
-  }
-  $('results').innerHTML = html;
-  return; // <<< svarbiausia: nebevykdom NEWS ir slaugos planas
-}
 
   const isRestrained = $('suvarzymas')?.checked===true;
   const nowTime = new Date().toLocaleTimeString('lt-LT',{hour:'2-digit',minute:'2-digit'});
@@ -1392,7 +1077,7 @@ function renderOutput(f, ctx){
   }
 
   // 2) Kiti planai (be dublių)
-[esamosU, galimosU].forEach(p=>{
+  [...esamosU, ...galimosU].forEach(p=>{
     if(combineBedRestAndUlcers){
       if(p==="Pragulos") return;
       if(p==="Rizika praguloms dėl lovos režimo") return;
@@ -1403,7 +1088,7 @@ function renderOutput(f, ctx){
 
     const key=Object.keys(slaugosPlanas).find(k=>p.startsWith(k));
     if(!key) return;
-    const items=[...(slaugosPlanas[key]||[])]
+    const items=[...(slaugosPlanas[key]||[])];
 
     // Esant aukštam SYS >165 — pridėti kas 30 min
     if(p.startsWith("Padidėjęs kraujo spaudimas") && highSys30){ items.push("AKS sekimas kas 30 min."); }
@@ -1523,9 +1208,7 @@ irasas +=
   `Slaugos problemos:\n${slaugosProb}\n\n`+
   `Galimos problemos:\n${galimosProb}\n\n`+
   `Slaugos planas:\n${planasText}`;
-if (dischargeText) {
-  irasas += `\n\n${dischargeText}`;
-}
+
   lastPayload={
     "Laikas": new Date().toLocaleString('lt-LT'),
     "palata": (f['palata'].value||"").trim(),
@@ -1561,33 +1244,17 @@ function keltiISistema(){
 }
 
 function resetForm(){
-  $('nursingForm')?.reset();
-  if($('results')) $('results').innerHTML = "";
-  if($('statusOk')) $('statusOk').style.display='none';
-  if($('statusErr')) $('statusErr').style.display='none';
-  if($('zaizdos_aprasymas')) $('zaizdos_aprasymas').style.display='none';
-  if($('dieta_kita_wrap')) $('dieta_kita_wrap').style.display='none';
-  if(typeof closeDvprs === "function") closeDvprs();
-
-  // discharge UI reset (saugiai)
-  const vn = $('vykstaNamo');
-  if(vn) vn.checked = false;
-
-  const box = $('namoBox');
-  if(box) box.style.display = 'none';
-
-  const sel = $('rekomTemplate');
-  if(sel) sel.value = "";
-
-  lastPayload = null;
+  $('nursingForm').reset();
+  $('results').innerHTML="";
+  $('statusOk').style.display='none';
+  $('statusErr').style.display='none';
+  $('zaizdos_aprasymas').style.display='none';
+  $('dieta_kita_wrap').style.display='none';
+  closeDvprs();
+  lastPayload=null;
 }
 </script>
 
 </body>
 </html>
-
-
-
-
-
 
