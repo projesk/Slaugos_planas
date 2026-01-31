@@ -1087,40 +1087,34 @@ onReady(() => {
   $('skausmas')?.addEventListener('change', e => { $('skausmoLygis')?.toggleAttribute('required', e.target.value === 'taip'); });
   $('resetBtn')?.addEventListener('click', resetForm);
   $('dieta_kodas')?.addEventListener('change', () => { $('dieta_kita_wrap').style.display = ($('dieta_kodas').value === 'KITA') ? 'block' : 'none'; });
-  // --- Discharge UI (pacientas vyksta namo) ---
-  function fillDischargeTemplates(){
-    const sel = $('rekomTemplate');
-    if(!sel) return;
+ // --- Discharge UI (pacientas vyksta namo) ---
+function fillDischargeTemplates(){
+  const sel = $('rekomTemplate');
+  if(!sel) return;
 
-    // paliekam tik pirmą "— pasirinkti —"
-    [...sel.querySelectorAll('option')].slice(1).forEach(o => o.remove());
+  // paliekam tik pirmą "— pasirinkti —"
+  [...sel.querySelectorAll('option')].slice(1).forEach(o => o.remove());
 
-    if(!Array.isArray(DISCHARGE_TEMPLATES)) return;
+  if(!Array.isArray(DISCHARGE_TEMPLATES)) return;
 
-    DISCHARGE_TEMPLATES.forEach(t => {
-      const opt = document.createElement('option');
-      opt.value = t.id;
-      opt.textContent = t.name;
-      sel.appendChild(opt);
-    });
-  }
+  DISCHARGE_TEMPLATES.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = t.name;
+    sel.appendChild(opt);
+  });
+}
 
-  function toggleDischargeUI(){
-    const going = $('vykstaNamo')?.checked === true;
-    const box = $('namoBox');
-    if(!box) return;
-   function toggleDischargeUI(){
+function toggleDischargeUI(){
   const going = $('vykstaNamo')?.checked === true;
   const box = $('namoBox');
-  if (box) box.style.display = going ? 'block' : 'none';
+  if(!box) return;
+  box.style.display = going ? 'block' : 'none';
 }
-$('vykstaNamo')?.addEventListener('change', toggleDischargeUI);
-toggleDischargeUI();
-  }
 
-  fillDischargeTemplates();
-  toggleDischargeUI();
-  $('vykstaNamo')?.addEventListener('change', toggleDischargeUI);
+fillDischargeTemplates();
+toggleDischargeUI();
+$('vykstaNamo')?.addEventListener('change', toggleDischargeUI);
 
   renderDvprs();
   $('openDvprsBtn')?.addEventListener('click', openDvprs);
@@ -1591,6 +1585,7 @@ function resetForm(){
 
 </body>
 </html>
+
 
 
 
