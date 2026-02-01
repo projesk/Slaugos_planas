@@ -45,8 +45,33 @@
   .checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:8px}
   .checks label{display:flex;align-items:center;gap:8px;margin:0;color:var(--text);font-size:14px}
   .checks input{width:auto;margin:0}
-  .hint{margin-top:8px;color:var(--muted);font-size:12px;line-height:1.35}
+  .checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:8px}
+.checks label{display:flex;align-items:center;gap:8px;margin:0;color:var(--text);font-size:14px}
+.checks input{width:auto;margin:0}
 
+/* ✅ Svarbu: kad checkbox'ai nebūtų kaip dideli input'ai */
+input[type="checkbox"]{
+  width:16px;
+  height:16px;
+  margin:0;
+  padding:0;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:4px;
+}
+  .hint{margin-top:8px;color:var(--muted);font-size:12px;line-height:1.35}
+/* ✅ ČIA ĮDĖK (po hint) */
+.checkline{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:10px;
+  color:var(--text);
+  font-size:14px;
+}
+.checkline input{
+  flex:0 0 auto;
+}
   .actions{
   max-width:1100px;
   margin:0 auto;
@@ -199,11 +224,10 @@
         <label><input type="checkbox" id="suvarzymas" /> Suvaržymas</label>
       </div>
       <div class="hint">Jei nepažymėta – įrašas bus: „Pacientas: neramus, neorientuotas“.</div>
-      <div class="row" style="margin-top:10px">
-  <label style="margin:0">
-    <input type="checkbox" id="vykstaNamo" />
-    Pacientas vyksta namo
-  </label>
+ <label class="checkline">
+  <input type="checkbox" id="vykstaNamo" />
+  Pacientas vyksta namo
+</label>
 </div>
 
 <div id="namoBox" style="display:none; margin-top:10px">
