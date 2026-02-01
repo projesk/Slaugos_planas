@@ -665,6 +665,82 @@ function vitalsText(spo2, sys, dia, map, hr, temp){
   const s=(spo2!=null)?`${spo2} %`:"-";
   const h=(hr!=null)?`${hr}/min`:"-";
   return `SpO₂: ${s}, AKS: ${aks}, ŠSD: ${h}, T: ${t}`;
+  // ===== Plan dedup (lvl 1, be AI) =====
+function normLT(s){
+  return (s||"")
+    .toLowerCase()
+    .replace(/[“”„"']/g,"")
+    .replace(/[(){}\[\],.;:!?]/g," ")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+// labai paprastas sinonimų/sutrumpinimų suvienodinimas
+function canonLT(s){
+  let x = normLT(s);
+
+  const repl = [
+    [/\baks\b/g, "arterinis kraujospudis"],
+    [/\bsp02\b/g, "saturacija"],
+    [/\bpulsas\b/g, "sirdies ritmas"],
+    [/\btemp\b/g, "temperatura"],
+    [/\bstebeti\b/g, "kontroliuoti"],
+    [/\bvertinti\b/g, "ivertinti"],
+    [/\bkvapavimo\b/g, "kvepavimo"],
+    [/\bsekreta\b/g, "sekreta"],
+  ];
+  for(const [r, to] of repl) x = x.replace(r, to);
+
+  // išmesti dažnius, kurie dažnai sukuria dirbtinius dublikatus
+  // (jei nenori – ištrink šitą eilutę)
+  x = x.replace(/\b(kas|q)\s*\d+(\s*-\s*\d+)?\s*(val|val\.)\b/g, "").trim();
+
+  return x;
+}
+
+// Jaccard panašumas (žodžių persidengimas)
+function jaccard(a, b){
+  const A = new Set(a.split(" ").filter(w=>w.length>=3));
+  const B = new Set(b.split(" ").filter(w=>w.length>=3));
+  if(A.size===0 || B.size===0) return 0;
+  let inter = 0;
+  for(const w of A) if(B.has(w)) inter++;
+  const uni = A.size + B.size - inter;
+  return inter / uni;
+}
+
+// atmeta identiškus + labai panašius
+function dedupItems(items, simThreshold=0.82){
+  const out = [];
+  const keys = []; // canon keys (for fast exact)
+  const canon = []; // canon strings (for similarity)
+
+  for(const raw of (items||[])){
+    const txt = (raw||"").trim();
+    if(!txt) continue;
+
+    const key = canonLT(txt);
+    if(!key) continue;
+
+    // 1) exact
+    if(keys.includes(key)) continue;
+
+    // 2) similar (Jaccard)
+    let isDup = false;
+    for(const c of canon){
+      if(jaccard(key, c) >= simThreshold){
+        isDup = true;
+        break;
+      }
+    }
+    if(isDup) continue;
+
+    out.push(txt);
+    keys.push(key);
+    canon.push(key);
+  }
+
+  return out;
 }
 
 /* =========================================================
@@ -1505,7 +1581,14 @@ html += `<p><strong>Ankstyvojo perspėjimo skalė (NEWS2):</strong> ${news.score
   if(isRestrained){ restraintPlan.forEach(it=>{ if(!seenPlan.has(it)){ seenPlan.add(it); planItems.push(it); } }); }
   if(pvExtraItems.length){ uniq(pvExtraItems).forEach(it=>{ if(!seenPlan.has(it)){ seenPlan.add(it); planItems.push(it); } }); }
 
-  const planasText = planItems.length ? planItems.map(i=>"• "+i).join("\n") : "-";
+// 🔽 PAŠALINAM DUBLIUS
+planItems = dedupItems(planItems);
+
+// 🔽 FORMUOJAM TEKSTĄ
+const planasText = planItems.length
+  ? planItems.map(i=>"• "+i).join("\n")
+  : "-";
+
   const gyvybiniai=vitalsText(spo2,sys,dia,map,hr,temp);
   const slaugosProb=esamosU.length?esamosU.join('; '):'-';
   const galimosProb=galimosU.length?galimosU.join('; '):'-';
