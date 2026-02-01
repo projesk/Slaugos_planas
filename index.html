@@ -665,6 +665,7 @@ function vitalsText(spo2, sys, dia, map, hr, temp){
   const s=(spo2!=null)?`${spo2} %`:"-";
   const h=(hr!=null)?`${hr}/min`:"-";
   return `SpO₂: ${s}, AKS: ${aks}, ŠSD: ${h}, T: ${t}`;
+  }
   // ===== Plan dedup (lvl 1, be AI) =====
 function normLT(s){
   return (s||"")
